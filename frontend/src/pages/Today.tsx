@@ -8,14 +8,17 @@ import { SkeletonLines } from "../components/SkeletonLines";
 import { entriesApi } from "../api/entries";
 import { ApiError } from "../api/client";
 import type { Activity, DayKind, Entry } from "../api/types";
+import { useAuth } from "../auth/AuthContext";
 import { useElapsedTimer } from "../hooks/useElapsedTimer";
 import { formatClockTime, formatHeaderDate, todayStr } from "../utils/date";
+import { buildGreeting } from "../utils/greeting";
 import styles from "./Today.module.css";
 
 type ViewState = "loading" | "idle" | "running" | "generating" | "done";
 
 export function Today() {
   const navigate = useNavigate();
+  const { username } = useAuth();
   const date = todayStr();
   const [entry, setEntry] = useState<Entry | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -24,6 +27,8 @@ export function Today() {
   const [busy, setBusy] = useState(false);
   const [offSheet, setOffSheet] = useState<DayKind | null>(null);
   const [offReason, setOffReason] = useState("");
+  const [projectText, setProjectText] = useState("");
+  const [greeting, setGreeting] = useState<string | null>(null);
 
   const elapsed = useElapsedTimer(view === "running" ? entry?.clock_in ?? null : null);
 
@@ -32,11 +37,29 @@ export function Today() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    // Picked once the username is known and kept for the session — a fresh phrase
+    // each time you open the app, not a new one on every re-render.
+    if (username) setGreeting(buildGreeting(username));
+  }, [username]);
+
   async function refresh() {
     const [e, acts] = await Promise.all([entriesApi.get(date), entriesApi.listActivities(date)]);
     setEntry(e);
     setActivities(acts);
+    setProjectText(e.project ?? "");
     setView(e.clock_in && e.clock_out ? "done" : e.clock_in ? "running" : "idle");
+  }
+
+  async function handleProjectBlur() {
+    if (projectText === (entry?.project ?? "")) return;
+    try {
+      const updated = await entriesApi.patch(date, { project: projectText || null });
+      setEntry(updated);
+    } catch {
+      // Best-effort autosave, same as the old to-do textarea — a transient failure
+      // here doesn't block clocking in/out.
+    }
   }
 
   async function handleClockIn() {
@@ -152,6 +175,7 @@ export function Today() {
   return (
     <AppShell fixedFooter={fixedFooter}>
       <div className={styles.content}>
+        {greeting && <p className={styles.greeting}>{greeting}</p>}
         <div className={styles.header}>
           <h1 className={styles.title}>Today</h1>
           <span className={styles.date}>{formatHeaderDate(date)}</span>
@@ -173,6 +197,16 @@ export function Today() {
               <span className={styles.eyebrow}>NOT STARTED</span>
               <p className={styles.bodyText}>No hours logged yet today.</p>
             </div>
+            <div className={styles.projectGroup}>
+              <span className={styles.eyebrow}>PROJECT</span>
+              <input
+                className={styles.projectInput}
+                placeholder="Project(s) you're working on…"
+                value={projectText}
+                onChange={(e) => setProjectText(e.target.value)}
+                onBlur={handleProjectBlur}
+              />
+            </div>
             <div className={styles.todoGroup}>
               <span className={styles.eyebrow}>ACTIVITY BOARD</span>
               <ActivityBoard date={date} activities={activities} onChange={setActivities} />
@@ -189,6 +223,16 @@ export function Today() {
               </div>
               <p className={styles.elapsed}>{elapsed}</p>
               <p className={styles.subLine}>Clocked in at {formatClockTime(entry.clock_in)}</p>
+            </div>
+            <div className={styles.projectGroup}>
+              <span className={styles.eyebrow}>PROJECT</span>
+              <input
+                className={styles.projectInput}
+                placeholder="Project(s) you're working on…"
+                value={projectText}
+                onChange={(e) => setProjectText(e.target.value)}
+                onBlur={handleProjectBlur}
+              />
             </div>
             <div className={styles.todoGroup}>
               <span className={styles.eyebrow}>ACTIVITY BOARD</span>

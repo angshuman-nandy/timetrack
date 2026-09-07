@@ -222,7 +222,7 @@ export function DayDetail() {
                 onChange={(e) => setField("project", e.target.value)}
               />
               <input
-                className={styles.pickerField}
+                className={`${styles.pickerField} ${styles.taskField}`}
                 placeholder="Task"
                 value={draft.task}
                 onChange={(e) => setField("task", e.target.value)}

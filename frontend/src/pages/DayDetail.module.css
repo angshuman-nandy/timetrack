@@ -127,6 +127,8 @@
 
 .pickerField {
   flex: 1;
+  min-width: 0; /* flex items default to a content-based min-width, which is wider
+    than the row on a narrow phone and forces the whole page to scroll horizontally */
   height: 50px;
   border-radius: 15px;
   background: var(--surface);
@@ -140,6 +142,10 @@
 
 .pickerField::placeholder {
   color: var(--ink-faint);
+}
+
+.taskField {
+  flex: 0.8; /* task names tend to be shorter than project names */
 }
 
 .textarea {

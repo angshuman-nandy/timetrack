@@ -5,6 +5,14 @@
   gap: 16px;
 }
 
+.greeting {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--ink-dim);
+  margin: 0 0 -6px;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -106,6 +114,30 @@
   font-size: 13px;
   color: var(--ink-dim);
   margin: 0;
+}
+
+.projectGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.projectInput {
+  height: 50px;
+  border-radius: 15px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  padding: 0 16px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--ink);
+  width: 100%;
+  min-width: 0;
+}
+
+.projectInput::placeholder {
+  color: var(--ink-faint);
 }
 
 .todoGroup {
