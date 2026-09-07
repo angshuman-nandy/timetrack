@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+body { margin: 0; background: #2A2320; }
+a { color: #C4552F; } a:hover { color: #E0713F; }
+</style>
+</helmet>
+<div style="display:flex; gap:28px; padding:28px; font-family:'DM Sans',sans-serif; align-items:flex-start; flex-wrap:wrap; background:#2A2320">
+
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <div style="font:500 12px/1 'DM Sans',sans-serif; letter-spacing:.14em; color:#9C8F85; text-transform:uppercase">Light</div>
+    <div style="width:300px; border-radius:34px; overflow:hidden; background:#F7F1E8; box-shadow:0 20px 50px rgba(0,0,0,.45); display:flex; flex-direction:column">
+      <div style="padding:16px 20px 8px; display:flex; justify-content:space-between; align-items:baseline">
+        <div style="font:400 26px/1 'Instrument Serif',serif; color:#241E1A">Today</div>
+        <div style="font:500 12px/1 'DM Sans',sans-serif; letter-spacing:.08em; color:#7C6E64">MON 7 SEP</div>
+      </div>
+      <div style="padding:8px 20px 20px; display:flex; flex-direction:column; gap:14px">
+        <div style="background:#FFFFFF; border:1.5px solid #E5D9CB; border-radius:22px; padding:20px; display:flex; flex-direction:column; gap:6px">
+          <div style="display:flex; align-items:center; gap:8px">
+            <div style="width:8px; height:8px; border-radius:50%; background:#E0913A"></div>
+            <div style="font:500 11px/1 'DM Sans',sans-serif; letter-spacing:.14em; color:#A66B18">IN PROGRESS</div>
+          </div>
+          <div style="font:400 46px/1 'Instrument Serif',serif; color:#241E1A; letter-spacing:-.01em">4:12:38</div>
+          <div style="font:400 13px/1.4 'DM Sans',sans-serif; color:#7C6E64">Clocked in 09:02</div>
+        </div>
+        <div style="background:#C4552F; border-radius:18px; height:56px; display:flex; align-items:center; justify-content:center; font:700 17px/1 'DM Sans',sans-serif; color:#FFF6EE">Clock Out</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <div style="height:44px; padding:0 16px; border-radius:14px; border:1.5px solid #DCCDBD; display:flex; align-items:center; font:500 13px/1 'DM Sans',sans-serif; color:#5C4F46">Time off</div>
+          <div style="height:44px; padding:0 16px; border-radius:14px; border:1.5px solid #DCCDBD; display:flex; align-items:center; font:500 13px/1 'DM Sans',sans-serif; color:#5C4F46">Holiday</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <div style="font:500 12px/1 'DM Sans',sans-serif; letter-spacing:.14em; color:#9C8F85; text-transform:uppercase">Dark</div>
+    <div style="width:300px; border-radius:34px; overflow:hidden; background:#1E1A17; box-shadow:0 20px 50px rgba(0,0,0,.45); display:flex; flex-direction:column">
+      <div style="padding:16px 20px 8px; display:flex; justify-content:space-between; align-items:baseline">
+        <div style="font:400 26px/1 'Instrument Serif',serif; color:#F4EDE4">Calendar</div>
+        <div style="font:500 12px/1 'DM Sans',sans-serif; color:#E0913A">142.5 h</div>
+      </div>
+      <div style="padding:8px 16px 20px; display:grid; grid-template-columns:repeat(5,1fr); gap:7px">
+        <div style="aspect-ratio:1; border-radius:12px; background:#2E6B5E; display:flex; align-items:flex-end; padding:6px; font:700 11px/1 'DM Sans',sans-serif; color:#EAF6F2">8.0</div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#2E6B5E; display:flex; align-items:flex-end; padding:6px; font:700 11px/1 'DM Sans',sans-serif; color:#EAF6F2">7.5</div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#4C6FA5; display:flex; align-items:flex-end; padding:6px; font:700 11px/1 'DM Sans',sans-serif; color:#EEF3FA">OFF</div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#8C5A9E; display:flex; align-items:flex-end; padding:6px; font:700 11px/1 'DM Sans',sans-serif; color:#F8EFFB">HOL</div>
+        <div style="aspect-ratio:1; border-radius:12px; border:2px dashed #E0913A; display:flex; align-items:flex-end; padding:6px; font:700 11px/1 'DM Sans',sans-serif; color:#E0913A">4.2</div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#2A2521"></div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#2E6B5E; display:flex; align-items:flex-end; padding:6px; font:700 11px/1 'DM Sans',sans-serif; color:#EAF6F2">6.0</div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#2A2521"></div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#2E6B5E; display:flex; align-items:flex-end; padding:6px; font:700 11px/1 'DM Sans',sans-serif; color:#EAF6F2">8.0</div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#2A2521"></div>
+      </div>
+      <div style="padding:0 20px 22px; display:flex; flex-direction:column; gap:8px">
+        <div style="font:500 11px/1 'DM Sans',sans-serif; letter-spacing:.14em; color:#8A7C72">SEMANTICS</div>
+        <div style="display:flex; gap:14px; flex-wrap:wrap; font:500 12px/1 'DM Sans',sans-serif; color:#D3C8BE">
+          <div style="display:flex; align-items:center; gap:6px"><span style="width:11px; height:11px; border-radius:3px; background:#2E6B5E"></span>Worked</div>
+          <div style="display:flex; align-items:center; gap:6px"><span style="width:11px; height:11px; border-radius:3px; background:#E0913A"></span>Open</div>
+          <div style="display:flex; align-items:center; gap:6px"><span style="width:11px; height:11px; border-radius:3px; background:#4C6FA5"></span>Time off</div>
+          <div style="display:flex; align-items:center; gap:6px"><span style="width:11px; height:11px; border-radius:3px; background:#8C5A9E"></span>Holiday</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:8px; max-width:200px">
+    <div style="font:400 28px/1.1 'Instrument Serif',serif; color:#F4EDE4">B — Terracotta Studio</div>
+    <div style="font:400 13px/1.5 'DM Sans',sans-serif; color:#A8998E">Warm paper, terracotta primary, deep green for worked days. Instrument Serif numerals over DM Sans. Calm and editorial.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:560}}"></script>
+</body>
+</html>

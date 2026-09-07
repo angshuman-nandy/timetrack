@@ -1,0 +1,12 @@
+{
+  "date_format": "%d-%m-%Y",
+  "include_kinds": ["work", "time_off", "holiday"],
+  "columns": [
+    {"header": "Date", "field": "date"},
+    {"header": "Project", "field": "project"},
+    {"header": "Task", "field": "task"},
+    {"header": "Description", "field": "summary"},
+    {"header": "Hours", "field": "hours"}
+  ],
+  "totals_row": true
+}

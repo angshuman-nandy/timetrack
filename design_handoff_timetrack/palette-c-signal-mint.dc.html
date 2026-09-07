@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&display=swap" rel="stylesheet" />
+<style>
+body { margin: 0; background: #171B22; }
+a { color: #00D4AE; } a:hover { color: #4FE7CB; }
+</style>
+</helmet>
+<div style="display:flex; gap:28px; padding:28px; font-family:'Archivo',sans-serif; align-items:flex-start; flex-wrap:wrap; background:#171B22">
+
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <div style="font:500 12px/1 'Archivo',sans-serif; letter-spacing:.14em; color:#7D8899; text-transform:uppercase">Light</div>
+    <div style="width:300px; border-radius:34px; overflow:hidden; background:#F4F6F8; box-shadow:0 20px 50px rgba(0,0,0,.45); display:flex; flex-direction:column">
+      <div style="padding:16px 20px 8px; display:flex; justify-content:space-between; align-items:center">
+        <div style="font:800 20px/1 'Archivo',sans-serif; letter-spacing:-.02em; color:#0E1116">Today</div>
+        <div style="font:500 12px/1 'Archivo',sans-serif; letter-spacing:.08em; color:#5E6875">MON 7 SEP</div>
+      </div>
+      <div style="padding:8px 20px 20px; display:flex; flex-direction:column; gap:14px">
+        <div style="background:#0E1116; border-radius:22px; padding:20px; display:flex; flex-direction:column; gap:6px">
+          <div style="display:flex; align-items:center; gap:8px">
+            <div style="width:8px; height:8px; border-radius:50%; background:#FFB020"></div>
+            <div style="font:600 11px/1 'Archivo',sans-serif; letter-spacing:.14em; color:#FFB020">IN PROGRESS</div>
+          </div>
+          <div style="font:800 42px/1 'Archivo',sans-serif; color:#F4F6F8; letter-spacing:-.03em">04:12:38</div>
+          <div style="font:400 13px/1.4 'Archivo',sans-serif; color:#8C97A6">Clocked in 09:02</div>
+        </div>
+        <div style="background:#00D4AE; border-radius:18px; height:56px; display:flex; align-items:center; justify-content:center; font:800 17px/1 'Archivo',sans-serif; letter-spacing:-.01em; color:#052B24">Clock Out</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap">
+          <div style="height:44px; padding:0 16px; border-radius:14px; border:1.5px solid #D5DBE2; display:flex; align-items:center; font:500 13px/1 'Archivo',sans-serif; color:#3D4653">Time off</div>
+          <div style="height:44px; padding:0 16px; border-radius:14px; border:1.5px solid #D5DBE2; display:flex; align-items:center; font:500 13px/1 'Archivo',sans-serif; color:#3D4653">Holiday</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:10px">
+    <div style="font:500 12px/1 'Archivo',sans-serif; letter-spacing:.14em; color:#7D8899; text-transform:uppercase">Dark</div>
+    <div style="width:300px; border-radius:34px; overflow:hidden; background:#0E1116; box-shadow:0 20px 50px rgba(0,0,0,.45); display:flex; flex-direction:column">
+      <div style="padding:16px 20px 8px; display:flex; justify-content:space-between; align-items:center">
+        <div style="font:800 20px/1 'Archivo',sans-serif; letter-spacing:-.02em; color:#F4F6F8">Calendar</div>
+        <div style="font:600 12px/1 'Archivo',sans-serif; color:#00D4AE">142.5 h</div>
+      </div>
+      <div style="padding:8px 16px 20px; display:grid; grid-template-columns:repeat(5,1fr); gap:7px">
+        <div style="aspect-ratio:1; border-radius:12px; background:#00D4AE; display:flex; align-items:flex-end; padding:6px; font:600 11px/1 'Archivo',sans-serif; color:#052B24">8.0</div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#00D4AE; display:flex; align-items:flex-end; padding:6px; font:600 11px/1 'Archivo',sans-serif; color:#052B24">7.5</div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#7C8BFF; display:flex; align-items:flex-end; padding:6px; font:600 11px/1 'Archivo',sans-serif; color:#0B1030">OFF</div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#FF3D8A; display:flex; align-items:flex-end; padding:6px; font:600 11px/1 'Archivo',sans-serif; color:#2E0417">HOL</div>
+        <div style="aspect-ratio:1; border-radius:12px; border:2px dashed #FFB020; display:flex; align-items:flex-end; padding:6px; font:600 11px/1 'Archivo',sans-serif; color:#FFB020">4.2</div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#191E26"></div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#00D4AE; display:flex; align-items:flex-end; padding:6px; font:600 11px/1 'Archivo',sans-serif; color:#052B24">6.0</div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#191E26"></div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#00D4AE; display:flex; align-items:flex-end; padding:6px; font:600 11px/1 'Archivo',sans-serif; color:#052B24">8.0</div>
+        <div style="aspect-ratio:1; border-radius:12px; background:#191E26"></div>
+      </div>
+      <div style="padding:0 20px 22px; display:flex; flex-direction:column; gap:8px">
+        <div style="font:500 11px/1 'Archivo',sans-serif; letter-spacing:.14em; color:#6E7A8A">SEMANTICS</div>
+        <div style="display:flex; gap:14px; flex-wrap:wrap; font:500 12px/1 'Archivo',sans-serif; color:#C4CCD6">
+          <div style="display:flex; align-items:center; gap:6px"><span style="width:11px; height:11px; border-radius:3px; background:#00D4AE"></span>Worked</div>
+          <div style="display:flex; align-items:center; gap:6px"><span style="width:11px; height:11px; border-radius:3px; background:#FFB020"></span>Open</div>
+          <div style="display:flex; align-items:center; gap:6px"><span style="width:11px; height:11px; border-radius:3px; background:#7C8BFF"></span>Time off</div>
+          <div style="display:flex; align-items:center; gap:6px"><span style="width:11px; height:11px; border-radius:3px; background:#FF3D8A"></span>Holiday</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:8px; max-width:200px">
+    <div style="font:800 22px/1.15 'Archivo',sans-serif; letter-spacing:-.02em; color:#F4F6F8">C — Signal Mint</div>
+    <div style="font:400 13px/1.5 'Archivo',sans-serif; color:#8C97A6">Cool slate, mint primary, magenta holidays. Archivo throughout, tight and dense. Reads most like a modern utility app.</div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:900,&quot;height&quot;:560}}"></script>
+</body>
+</html>

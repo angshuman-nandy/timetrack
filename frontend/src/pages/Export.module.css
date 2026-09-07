@@ -1,0 +1,209 @@
+.content {
+  padding: 8px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--ink);
+  margin: 0;
+}
+
+.sectionLabel {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.optionStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.optionRow {
+  min-height: 52px;
+  border-radius: 15px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  width: 100%;
+}
+
+.optionRow.selected {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.optionLabel {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.optionRow.selected .optionLabel {
+  color: var(--on-primary);
+}
+
+.optionHint {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.optionRow.selected .optionHint {
+  color: rgba(22, 24, 28, 0.6);
+}
+
+.customDates {
+  display: flex;
+  gap: 8px;
+}
+
+.dateInput {
+  flex: 1;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  padding: 0 10px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.formatRow {
+  display: flex;
+  gap: 8px;
+}
+
+.formatButton {
+  flex: 1;
+  height: 52px;
+  border-radius: 15px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.formatButton.selected {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.previewCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.previewLabel {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+
+.statsRow {
+  display: flex;
+  gap: 26px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.statValue {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--ink);
+}
+
+.statValue.accent {
+  color: var(--primary);
+}
+
+.statLabel {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--ink-dim);
+}
+
+.previewFootnote {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-faint);
+  margin: 0;
+}
+
+.errorCard {
+  background: var(--error-surface);
+  border: 1px solid var(--error-border);
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.errorTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--error-text);
+  margin: 0 0 2px;
+}
+
+.errorBody {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--error-text-soft);
+  margin: 0;
+}
+
+.downloadButton {
+  min-height: 60px;
+  border-radius: 18px;
+  background: var(--primary);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.downloadButton.working {
+  background: var(--primary-pressed);
+}

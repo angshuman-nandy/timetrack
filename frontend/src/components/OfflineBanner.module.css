@@ -1,0 +1,26 @@
+.banner {
+  margin: 0 16px 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--warning-surface);
+  border: 1px solid var(--warning-border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--in-progress);
+  flex-shrink: 0;
+}
+
+.text {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--warning-text);
+}

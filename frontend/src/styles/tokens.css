@@ -1,0 +1,162 @@
+/* Design tokens — Citron Night palette. Dark is the default theme (matches the design
+   spec); light is reachable via prefers-color-scheme or an explicit [data-theme]. */
+
+:root {
+  --bg: #101215;
+  --surface: #1b1e23;
+  --surface-raised: #23272e;
+  --surface-sunken: #15181c;
+  --border: #2c313a;
+  --border-subtle: #1e2228;
+
+  --ink: #f2f3ee;
+  --ink-muted: #c9ccd2;
+  --ink-dim: #9a9fa8;
+  --ink-faint: #6b7079;
+
+  --primary: #c6e82f;
+  --primary-pressed: #8fa820;
+  --on-primary: #16181c;
+
+  --worked: #c6e82f;
+  --in-progress: #ff7a3d;
+  --time-off: #4a8bff;
+  --holiday: #b07cff;
+  --time-off-ink: #0b1020;
+  --holiday-ink: #1a0f2e;
+
+  --error-text: #ff8a6b;
+  --error-text-soft: #d8a79a;
+  --error-border: #ff6b4a;
+  --error-surface: #2a1a18;
+  --warning-surface: #2a2118;
+  --warning-border: #5a3d18;
+  --warning-text: #f0c79a;
+  --edited-text: #ff9e6b;
+
+  --font-sans: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --safe-top: max(env(safe-area-inset-top), 52px);
+  --safe-bottom: max(env(safe-area-inset-bottom), 22px);
+
+  /* Calendar cell text-on-fill colors — exact per-state values from the design spec */
+  --cal-worked-number: rgba(22, 24, 28, 0.6);
+  --cal-worked-tag: #16181c;
+  --cal-time-off-number: rgba(11, 16, 32, 0.65);
+  --cal-time-off-tag: #0b1020;
+  --cal-holiday-number: rgba(26, 15, 46, 0.65);
+  --cal-holiday-tag: #1a0f2e;
+  --cal-weekend-fill: #15181c;
+  --cal-weekend-number: #3d444e;
+  --cal-empty-fill: #1b1e23;
+  --cal-empty-number: #6b7079;
+}
+
+/* Light theme — via system preference or an explicit override */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #fbfbf3;
+    --surface: #ffffff;
+    --surface-raised: #efefe4;
+    --surface-sunken: #f2f2e8;
+    --border: #dedcd0;
+    --border-subtle: #ececdf;
+
+    --ink: #16181c;
+    --ink-muted: #4a4f58;
+    --ink-dim: #6b7079;
+    --ink-faint: #8a8f98;
+
+    --primary: #c6e82f;
+    --primary-pressed: #b8d928;
+    --on-primary: #16181c;
+
+    --worked: #8ca800;
+    --in-progress: #c2500f;
+    --time-off: #2c63d6;
+    --holiday: #7b45d6;
+    --time-off-ink: #ffffff;
+    --holiday-ink: #ffffff;
+
+    --cal-worked-number: rgba(22, 24, 28, 0.65);
+    --cal-worked-tag: #16181c;
+    --cal-time-off-number: rgba(255, 255, 255, 0.85);
+    --cal-time-off-tag: #ffffff;
+    --cal-holiday-number: rgba(255, 255, 255, 0.85);
+    --cal-holiday-tag: #ffffff;
+    --cal-weekend-fill: #efefe4;
+    --cal-weekend-number: #9a9fa8;
+    --cal-empty-fill: #f5f5ec;
+    --cal-empty-number: #8a8f98;
+  }
+}
+
+:root[data-theme="light"] {
+  --bg: #fbfbf3;
+  --surface: #ffffff;
+  --surface-raised: #efefe4;
+  --surface-sunken: #f2f2e8;
+  --border: #dedcd0;
+  --border-subtle: #ececdf;
+
+  --ink: #16181c;
+  --ink-muted: #4a4f58;
+  --ink-dim: #6b7079;
+  --ink-faint: #8a8f98;
+
+  --primary: #c6e82f;
+  --primary-pressed: #b8d928;
+  --on-primary: #16181c;
+
+  --worked: #8ca800;
+  --in-progress: #c2500f;
+  --time-off: #2c63d6;
+  --holiday: #7b45d6;
+  --time-off-ink: #ffffff;
+  --holiday-ink: #ffffff;
+
+  --cal-worked-number: rgba(22, 24, 28, 0.65);
+  --cal-worked-tag: #16181c;
+  --cal-time-off-number: rgba(255, 255, 255, 0.85);
+  --cal-time-off-tag: #ffffff;
+  --cal-holiday-number: rgba(255, 255, 255, 0.85);
+  --cal-holiday-tag: #ffffff;
+  --cal-weekend-fill: #efefe4;
+  --cal-weekend-number: #9a9fa8;
+  --cal-empty-fill: #f5f5ec;
+  --cal-empty-number: #8a8f98;
+}
+
+:root[data-theme="dark"] {
+  --bg: #101215;
+  --surface: #1b1e23;
+  --surface-raised: #23272e;
+  --surface-sunken: #15181c;
+  --border: #2c313a;
+  --border-subtle: #1e2228;
+  --ink: #f2f3ee;
+  --ink-muted: #c9ccd2;
+  --ink-dim: #9a9fa8;
+  --ink-faint: #6b7079;
+  --primary: #c6e82f;
+  --primary-pressed: #8fa820;
+  --on-primary: #16181c;
+  --worked: #c6e82f;
+  --in-progress: #ff7a3d;
+  --time-off: #4a8bff;
+  --holiday: #b07cff;
+  --time-off-ink: #0b1020;
+  --holiday-ink: #1a0f2e;
+
+  --cal-worked-number: rgba(22, 24, 28, 0.6);
+  --cal-worked-tag: #16181c;
+  --cal-time-off-number: rgba(11, 16, 32, 0.65);
+  --cal-time-off-tag: #0b1020;
+  --cal-holiday-number: rgba(26, 15, 46, 0.65);
+  --cal-holiday-tag: #1a0f2e;
+  --cal-weekend-fill: #15181c;
+  --cal-weekend-number: #3d444e;
+  --cal-empty-fill: #1b1e23;
+  --cal-empty-number: #6b7079;
+}

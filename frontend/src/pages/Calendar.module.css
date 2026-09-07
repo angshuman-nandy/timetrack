@@ -1,0 +1,241 @@
+.content {
+  padding: 8px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.headerBlock {
+  padding: 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.headerRow1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--ink);
+  margin: 0;
+}
+
+.navButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.navButton {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 17px;
+  color: var(--ink-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.headerRow2 {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.monthLabel {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--ink-muted);
+}
+
+.monthTotal {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.monthTotalValue {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 24px;
+  color: var(--primary);
+}
+
+.monthTotalLabel {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.weekdayHeader {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+  text-align: center;
+  padding-bottom: 2px;
+}
+
+.cell {
+  aspect-ratio: 1;
+  border-radius: 11px;
+  padding: 5px 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--cal-empty-fill);
+}
+
+.cell.worked {
+  background: var(--worked);
+}
+
+.cell.inProgress {
+  background: none;
+  border: 2px dashed var(--in-progress);
+}
+
+.cell.timeOff {
+  background: var(--time-off);
+}
+
+.cell.holiday {
+  background: var(--holiday);
+}
+
+.cell.weekend {
+  background: var(--cal-weekend-fill);
+}
+
+.dayNumber {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--cal-empty-number);
+}
+
+.cell.worked .dayNumber {
+  color: var(--cal-worked-number);
+}
+
+.cell.inProgress .dayNumber {
+  color: var(--in-progress);
+}
+
+.cell.timeOff .dayNumber {
+  color: var(--cal-time-off-number);
+}
+
+.cell.holiday .dayNumber {
+  color: var(--cal-holiday-number);
+}
+
+.cell.weekend .dayNumber {
+  color: var(--cal-weekend-number);
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.cell.worked .tag {
+  color: var(--cal-worked-tag);
+}
+
+.cell.inProgress .tag {
+  color: var(--in-progress);
+}
+
+.cell.timeOff .tag {
+  color: var(--cal-time-off-tag);
+}
+
+.cell.holiday .tag {
+  color: var(--cal-holiday-tag);
+}
+
+.cellButton {
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+
+.legend {
+  padding: 12px 4px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--ink-dim);
+}
+
+.legendSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.emptyState {
+  padding: 52px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  border: 2px dashed var(--border);
+}
+
+.emptyTitle {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.emptyBody {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-faint);
+  max-width: 230px;
+  margin: 0;
+}

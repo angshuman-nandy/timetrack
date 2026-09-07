@@ -1,0 +1,22 @@
+# secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# node / vite
+node_modules/
+frontend/dist/
+.vite/
+
+# local runtime data — the live db must never be committed or land in the bucket by accident
+*.db
+*.db-journal
+*.db-wal
+
+# os
+.DS_Store

@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+body { margin: 0; background: #22242A; }
+a { color: #C6E82F; text-decoration: none; } a:hover { color: #DFF56A; }
+input, textarea, button { font-family: 'Space Grotesk', sans-serif; }
+input::placeholder, textarea::placeholder { color: #6B7079; }
+@keyframes tt-pulse { 0%,100% { opacity: .35 } 50% { opacity: 1 } }
+@keyframes tt-spin { to { transform: rotate(360deg) } }
+</style>
+</helmet>
+<div style="display:flex; gap:36px; padding:36px; background:#22242A; font-family:'Space Grotesk',sans-serif; align-items:flex-start; flex-wrap:wrap; min-height:100vh">
+
+  <div style="display:flex; flex-direction:column; gap:22px; width:300px">
+    <div style="display:flex; flex-direction:column; gap:8px">
+      <div style="font:700 30px/1.05 'Space Grotesk',sans-serif; letter-spacing:-.02em; color:#F2F3EE">TimeTrack</div>
+      <div style="font:400 13px/1.55 'Space Grotesk',sans-serif; color:#9A9FA8">Citron Night, dark default. Tappable prototype — clock in and out, page the calendar, open a day, run an export. Every tap target is 44px or more.</div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:10px">
+      <div style="font:500 10px/1 'JetBrains Mono',monospace; letter-spacing:.18em; color:#6B7079">DARK THEME — DEFAULT</div>
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px">
+        <div style="height:38px; border-radius:8px; background:#101215; border:1px solid #2C313A"></div>
+        <div style="height:38px; border-radius:8px; background:#1B1E23; border:1px solid #2C313A"></div>
+        <div style="height:38px; border-radius:8px; background:#23272E; border:1px solid #2C313A"></div>
+        <div style="height:38px; border-radius:8px; background:#F2F3EE"></div>
+      </div>
+      <div style="display:flex; gap:14px; flex-wrap:wrap; font:400 11px/1 'JetBrains Mono',monospace; color:#6B7079">
+        <span>#101215</span><span>#1B1E23</span><span>#23272E</span><span>#F2F3EE</span>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:10px">
+      <div style="font:500 10px/1 'JetBrains Mono',monospace; letter-spacing:.18em; color:#6B7079">LIGHT THEME</div>
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:6px">
+        <div style="height:38px; border-radius:8px; background:#FBFBF3; border:1px solid #DEDDD0"></div>
+        <div style="height:38px; border-radius:8px; background:#FFFFFF; border:1px solid #DEDDD0"></div>
+        <div style="height:38px; border-radius:8px; background:#EFEFE4; border:1px solid #DEDDD0"></div>
+        <div style="height:38px; border-radius:8px; background:#16181C"></div>
+      </div>
+      <div style="display:flex; gap:14px; flex-wrap:wrap; font:400 11px/1 'JetBrains Mono',monospace; color:#6B7079">
+        <span>#FBFBF3</span><span>#FFFFFF</span><span>#EFEFE4</span><span>#16181C</span>
+      </div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:12px">
+      <div style="font:500 10px/1 'JetBrains Mono',monospace; letter-spacing:.18em; color:#6B7079">DAY SEMANTICS</div>
+      <div style="display:flex; flex-direction:column; gap:9px; font:500 12px/1 'Space Grotesk',sans-serif; color:#C9CCD2">
+        <div style="display:flex; align-items:center; gap:9px"><span style="width:26px; height:16px; border-radius:5px; background:#C6E82F"></span><span style="width:26px; height:16px; border-radius:5px; background:#8CA800"></span>Worked</div>
+        <div style="display:flex; align-items:center; gap:9px"><span style="width:26px; height:16px; border-radius:5px; border:2px dashed #FF7A3D"></span><span style="width:26px; height:16px; border-radius:5px; border:2px dashed #C2500F"></span>In progress</div>
+        <div style="display:flex; align-items:center; gap:9px"><span style="width:26px; height:16px; border-radius:5px; background:#4A8BFF"></span><span style="width:26px; height:16px; border-radius:5px; background:#2C63D6"></span>Time off</div>
+        <div style="display:flex; align-items:center; gap:9px"><span style="width:26px; height:16px; border-radius:5px; background:#B07CFF"></span><span style="width:26px; height:16px; border-radius:5px; background:#7B45D6"></span>Holiday</div>
+      </div>
+      <div style="font:400 12px/1.5 'Space Grotesk',sans-serif; color:#6B7079">Hue plus fill treatment: in-progress is the only outlined cell, so the four stay separable without relying on colour alone.</div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:10px">
+      <div style="font:500 10px/1 'JetBrains Mono',monospace; letter-spacing:.18em; color:#6B7079">LIGHT THEME — TODAY</div>
+      <div style="border-radius:22px; background:#FBFBF3; border:1px solid #DEDDD0; padding:16px; display:flex; flex-direction:column; gap:12px">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div style="font:700 15px/1 'Space Grotesk',sans-serif; color:#16181C">Today</div>
+          <div style="font:400 11px/1 'JetBrains Mono',monospace; color:#6B7079">MON 7 SEP</div>
+        </div>
+        <div style="background:#FFFFFF; border:1px solid #DEDDD0; border-radius:16px; padding:14px; display:flex; flex-direction:column; gap:5px">
+          <div style="display:flex; align-items:center; gap:7px">
+            <span style="width:7px; height:7px; border-radius:50%; background:#C2500F"></span>
+            <span style="font:400 10px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#C2500F">IN PROGRESS</span>
+          </div>
+          <div style="font:700 30px/1 'JetBrains Mono',monospace; color:#16181C; letter-spacing:-.02em">04:12:38</div>
+        </div>
+        <div style="background:#16181C; border-radius:14px; height:44px; display:flex; align-items:center; justify-content:center; font:700 14px/1 'Space Grotesk',sans-serif; color:#C6E82F">Clock Out</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px">
+    <div style="font:500 10px/1 'JetBrains Mono',monospace; letter-spacing:.18em; color:#6B7079">390 × 844 · INSTALLED PWA</div>
+    <div style="width:390px; height:844px; border-radius:44px; background:#101215; overflow:hidden; position:relative; display:flex; flex-direction:column; box-shadow:0 30px 80px rgba(0,0,0,.5)">
+
+      <div style="height:52px; flex:none; padding:0 30px; display:flex; align-items:center; justify-content:space-between; font:500 13px/1 'JetBrains Mono',monospace; color:#F2F3EE">
+        <span>9:41</span>
+        <span style="display:flex; gap:5px; align-items:center">
+          <span style="width:16px; height:9px; border-radius:2px; background:#F2F3EE"></span>
+          <span style="width:22px; height:11px; border-radius:3px; border:1.5px solid #F2F3EE"></span>
+        </span>
+      </div>
+
+      <sc-if value="{{ offline }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:none; margin:0 16px 8px; padding:10px 14px; border-radius:12px; background:#2A2118; border:1px solid #5A3D18; display:flex; align-items:center; gap:10px">
+          <span style="width:8px; height:8px; border-radius:50%; background:#FF7A3D; flex:none"></span>
+          <span style="font:500 12px/1.35 'Space Grotesk',sans-serif; color:#F0C79A">Offline. Times are saved on this phone and will sync when you reconnect.</span>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:0 28px 60px; gap:28px">
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <div style="width:44px; height:44px; border-radius:13px; background:#C6E82F; display:flex; align-items:center; justify-content:center; font:700 18px/1 'JetBrains Mono',monospace; color:#16181C">TT</div>
+            <div style="font:700 32px/1.1 'Space Grotesk',sans-serif; letter-spacing:-.02em; color:#F2F3EE">Sign in</div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:12px">
+            <input value="{{ user }}" onChange="{{ setUser }}" placeholder="Username" style="height:54px; border-radius:15px; background:#1B1E23; border:1.5px solid {{ userBorder }}; padding:0 16px; font:500 16px/1 'Space Grotesk',sans-serif; color:#F2F3EE; outline:none" />
+            <input value="{{ pw }}" onChange="{{ setPw }}" type="password" placeholder="Password" style="height:54px; border-radius:15px; background:#1B1E23; border:1.5px solid {{ pwBorder }}; padding:0 16px; font:500 16px/1 'Space Grotesk',sans-serif; color:#F2F3EE; outline:none" />
+            <sc-if value="{{ pwErr }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; gap:8px; align-items:flex-start; padding:2px 2px 0">
+                <span style="font:700 13px/1.4 'JetBrains Mono',monospace; color:#FF6B4A">!</span>
+                <span style="font:500 13px/1.4 'Space Grotesk',sans-serif; color:#FF8A6B">That password doesn’t match. Try again.</span>
+              </div>
+            </sc-if>
+          </div>
+          <div onClick="{{ signIn }}" style="height:56px; border-radius:16px; background:#C6E82F; display:flex; align-items:center; justify-content:center; font:700 17px/1 'Space Grotesk',sans-serif; color:#16181C; cursor:pointer">Sign in</div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isToday }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1; overflow:auto; padding:8px 20px 0; display:flex; flex-direction:column; gap:16px">
+          <div style="display:flex; justify-content:space-between; align-items:baseline">
+            <div style="font:700 28px/1 'Space Grotesk',sans-serif; letter-spacing:-.02em; color:#F2F3EE">Today</div>
+            <div style="font:500 12px/1 'JetBrains Mono',monospace; letter-spacing:.06em; color:#6B7079">{{ todayLabel }}</div>
+          </div>
+
+          <sc-if value="{{ tIdle }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:16px">
+              <div style="background:#1B1E23; border:1px solid #2C313A; border-radius:22px; padding:20px; display:flex; flex-direction:column; gap:6px">
+                <div style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#6B7079">NOT STARTED</div>
+                <div style="font:700 15px/1.45 'Space Grotesk',sans-serif; color:#C9CCD2">No hours logged yet today.</div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:8px">
+                <div style="display:flex; justify-content:space-between; align-items:baseline">
+                  <span style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#6B7079">TO-DO LIST</span>
+                  <span style="font:400 11px/1 'Space Grotesk',sans-serif; color:#6B7079">Optional</span>
+                </div>
+                <textarea value="{{ todo }}" onChange="{{ setTodo }}" placeholder="What’s on for today? Skip it if you’d rather just start." style="min-height:88px; border-radius:16px; background:#1B1E23; border:1.5px solid #2C313A; padding:14px; font:400 15px/1.5 'Space Grotesk',sans-serif; color:#F2F3EE; outline:none; resize:none"></textarea>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ tRunning }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:16px">
+              <div style="background:#1B1E23; border:1px solid #2C313A; border-radius:22px; padding:22px; display:flex; flex-direction:column; gap:8px">
+                <div style="display:flex; align-items:center; gap:8px">
+                  <span style="width:8px; height:8px; border-radius:50%; background:#FF7A3D; animation:tt-pulse 2.4s ease-in-out infinite"></span>
+                  <span style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#FF7A3D">IN PROGRESS</span>
+                </div>
+                <div style="font:700 48px/1 'JetBrains Mono',monospace; letter-spacing:-.03em; color:#F2F3EE">{{ elapsed }}</div>
+                <div style="font:400 13px/1.4 'Space Grotesk',sans-serif; color:#9A9FA8">Clocked in at {{ clockInTime }}</div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:8px">
+                <span style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#6B7079">TO-DO LIST</span>
+                <textarea value="{{ todo }}" onChange="{{ setTodo }}" placeholder="Add what you’re working on…" style="min-height:96px; border-radius:16px; background:#1B1E23; border:1.5px solid #2C313A; padding:14px; font:400 15px/1.5 'Space Grotesk',sans-serif; color:#F2F3EE; outline:none; resize:none"></textarea>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ tGenerating }}" hint-placeholder-val="{{ false }}">
+            <div style="background:#1B1E23; border:1px solid #2C313A; border-radius:22px; padding:22px; display:flex; flex-direction:column; gap:14px">
+              <div style="display:flex; align-items:center; gap:10px">
+                <span style="width:16px; height:16px; border-radius:50%; border:2px solid #2C313A; border-top-color:#C6E82F; animation:tt-spin .9s linear infinite"></span>
+                <span style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#C6E82F">WRITING YOUR SUMMARY</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:9px">
+                <div style="height:13px; border-radius:7px; background:#23272E; width:92%; animation:tt-pulse 1.6s ease-in-out infinite"></div>
+                <div style="height:13px; border-radius:7px; background:#23272E; width:78%; animation:tt-pulse 1.6s ease-in-out .2s infinite"></div>
+                <div style="height:13px; border-radius:7px; background:#23272E; width:56%; animation:tt-pulse 1.6s ease-in-out .4s infinite"></div>
+              </div>
+              <div style="font:400 13px/1.45 'Space Grotesk',sans-serif; color:#6B7079">{{ genHours }} h logged. This takes a couple of seconds — you can leave the screen.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ tDone }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:14px">
+              <div style="background:#1B1E23; border:1px solid #2C313A; border-radius:22px; overflow:hidden">
+                <div style="padding:20px; display:flex; flex-direction:column; gap:14px">
+                  <div style="display:flex; justify-content:space-between; align-items:center">
+                    <div style="display:flex; align-items:center; gap:8px">
+                      <span style="width:8px; height:8px; border-radius:2px; background:#C6E82F"></span>
+                      <span style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#C6E82F">DAY COMPLETE</span>
+                    </div>
+                    <div style="font:700 22px/1 'JetBrains Mono',monospace; color:#F2F3EE">{{ doneHours }} h</div>
+                  </div>
+                  <div style="font:400 15px/1.55 'Space Grotesk',sans-serif; color:#C9CCD2">{{ summary }}</div>
+                  <div style="display:flex; gap:16px; font:400 12px/1 'JetBrains Mono',monospace; color:#6B7079">
+                    <span>{{ clockInTime }} → {{ clockOutTime }}</span>
+                    <span>{{ project }}</span>
+                  </div>
+                </div>
+                <div onClick="{{ openToday }}" style="height:52px; border-top:1px solid #2C313A; display:flex; align-items:center; justify-content:center; gap:8px; font:600 15px/1 'Space Grotesk',sans-serif; color:#C6E82F; cursor:pointer">Edit this day</div>
+              </div>
+              <div onClick="{{ reset }}" style="height:44px; border-radius:14px; border:1.5px solid #2C313A; display:flex; align-items:center; justify-content:center; font:500 14px/1 'Space Grotesk',sans-serif; color:#9A9FA8; cursor:pointer">Reopen the day</div>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="flex:none; padding:16px 20px 8px; display:flex; flex-direction:column; gap:10px; background:linear-gradient(to top, #101215 55%, rgba(16,18,21,0))">
+          <sc-if value="{{ showPrimary }}" hint-placeholder-val="{{ true }}">
+            <div onClick="{{ toggleClock }}" style="height:64px; border-radius:20px; background:{{ primaryBg }}; border:{{ primaryBorder }}; display:flex; align-items:center; justify-content:center; font:700 19px/1 'Space Grotesk',sans-serif; letter-spacing:-.01em; color:{{ primaryFg }}; cursor:pointer">{{ primaryLabel }}</div>
+          </sc-if>
+          <sc-if value="{{ tIdle }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; gap:8px">
+              <div onClick="{{ markOff }}" style="flex:1; height:46px; border-radius:14px; border:1.5px solid #2C313A; display:flex; align-items:center; justify-content:center; font:500 14px/1 'Space Grotesk',sans-serif; color:#9A9FA8; cursor:pointer">Time off</div>
+              <div onClick="{{ markHol }}" style="flex:1; height:46px; border-radius:14px; border:1.5px solid #2C313A; display:flex; align-items:center; justify-content:center; font:500 14px/1 'Space Grotesk',sans-serif; color:#9A9FA8; cursor:pointer">Holiday</div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isCal }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1; overflow:auto; padding:8px 16px 20px; display:flex; flex-direction:column; gap:16px">
+          <div style="padding:0 4px; display:flex; flex-direction:column; gap:14px">
+            <div style="display:flex; justify-content:space-between; align-items:center">
+              <div style="font:700 28px/1 'Space Grotesk',sans-serif; letter-spacing:-.02em; color:#F2F3EE">Calendar</div>
+              <div style="display:flex; gap:6px">
+                <div onClick="{{ prevMonth }}" style="width:44px; height:44px; border-radius:13px; border:1.5px solid #2C313A; display:flex; align-items:center; justify-content:center; font:500 17px/1 'Space Grotesk',sans-serif; color:#C9CCD2; cursor:pointer">‹</div>
+                <div onClick="{{ nextMonth }}" style="width:44px; height:44px; border-radius:13px; border:1.5px solid #2C313A; display:flex; align-items:center; justify-content:center; font:500 17px/1 'Space Grotesk',sans-serif; color:#C9CCD2; cursor:pointer">›</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:baseline; justify-content:space-between; padding-bottom:2px; border-bottom:1px solid #2C313A">
+              <div style="font:600 16px/1.6 'Space Grotesk',sans-serif; color:#C9CCD2">{{ monthLabel }}</div>
+              <div style="display:flex; align-items:baseline; gap:6px">
+                <span style="font:700 24px/1.4 'JetBrains Mono',monospace; color:#C6E82F">{{ monthTotal }}</span>
+                <span style="font:500 12px/1 'JetBrains Mono',monospace; color:#6B7079">HOURS</span>
+              </div>
+            </div>
+          </div>
+
+          <sc-if value="{{ calLoading }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:6px">
+              <sc-for list="{{ skeletons }}" as="s" hint-placeholder-count="35">
+                <div style="aspect-ratio:1; border-radius:11px; background:#1B1E23; animation:tt-pulse 1.6s ease-in-out infinite"></div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ calEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:52px 24px; display:flex; flex-direction:column; align-items:center; gap:12px; text-align:center">
+              <div style="width:52px; height:52px; border-radius:16px; border:2px dashed #2C313A"></div>
+              <div style="font:600 17px/1.35 'Space Grotesk',sans-serif; color:#C9CCD2">Nothing logged in {{ monthLabel }}</div>
+              <div style="font:400 14px/1.5 'Space Grotesk',sans-serif; color:#6B7079; max-width:230px">Tap any day to add hours by hand, or clock in from Today.</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ calReady }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex; flex-direction:column; gap:8px">
+              <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:6px; font:500 10px/1 'JetBrains Mono',monospace; letter-spacing:.1em; color:#6B7079; text-align:center">
+                <div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div>
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:6px">
+                <sc-for list="{{ blanks }}" as="b" hint-placeholder-count="1">
+                  <div style="aspect-ratio:1"></div>
+                </sc-for>
+                <sc-for list="{{ days }}" as="d" hint-placeholder-count="30">
+                  <div onClick="{{ d.open }}" style="aspect-ratio:1; border-radius:11px; background:{{ d.bg }}; border:{{ d.border }}; display:flex; flex-direction:column; justify-content:space-between; padding:5px 6px; cursor:pointer">
+                    <div style="font:500 11px/1 'JetBrains Mono',monospace; color:{{ d.numFg }}">{{ d.n }}</div>
+                    <div style="font:700 11px/1 'JetBrains Mono',monospace; color:{{ d.fg }}">{{ d.tag }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex; gap:12px; flex-wrap:wrap; padding:12px 4px 0; font:500 11px/1 'Space Grotesk',sans-serif; color:#9A9FA8">
+                <div style="display:flex; align-items:center; gap:6px"><span style="width:10px; height:10px; border-radius:3px; background:#C6E82F"></span>Worked</div>
+                <div style="display:flex; align-items:center; gap:6px"><span style="width:10px; height:10px; border-radius:3px; border:2px dashed #FF7A3D"></span>In progress</div>
+                <div style="display:flex; align-items:center; gap:6px"><span style="width:10px; height:10px; border-radius:3px; background:#4A8BFF"></span>Time off</div>
+                <div style="display:flex; align-items:center; gap:6px"><span style="width:10px; height:10px; border-radius:3px; background:#B07CFF"></span>Holiday</div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isDay }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1; overflow:auto; padding:8px 20px 20px; display:flex; flex-direction:column; gap:18px">
+          <div style="display:flex; align-items:center; gap:12px">
+            <div onClick="{{ backToCal }}" style="width:44px; height:44px; margin-left:-10px; border-radius:13px; display:flex; align-items:center; justify-content:center; font:500 20px/1 'Space Grotesk',sans-serif; color:#C9CCD2; cursor:pointer">‹</div>
+            <div style="display:flex; flex-direction:column; gap:3px">
+              <div style="font:700 22px/1 'Space Grotesk',sans-serif; letter-spacing:-.02em; color:#F2F3EE">{{ dayTitle }}</div>
+              <div style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.1em; color:{{ dayStateFg }}">{{ dayStateLabel }}</div>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:8px">
+            <div style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#6B7079">HOURS</div>
+            <div style="display:flex; gap:10px; align-items:center">
+              <input value="{{ dayHours }}" onChange="{{ setDayHours }}" style="width:110px; height:54px; border-radius:15px; background:#1B1E23; border:1.5px solid #2C313A; padding:0 16px; font:700 20px/1 'JetBrains Mono',monospace; color:#F2F3EE; outline:none" />
+              <div style="font:400 12px/1.45 'Space Grotesk',sans-serif; color:#6B7079">Derived from 09:02 → 17:34.<br />Typing here overrides it.</div>
+            </div>
+            <sc-if value="{{ hoursOverridden }}" hint-placeholder-val="{{ false }}">
+              <div style="font:500 12px/1 'Space Grotesk',sans-serif; color:#FF9E6B">Overridden — the clock times are kept for reference.</div>
+            </sc-if>
+          </div>
+
+          <div style="display:flex; gap:10px">
+            <div style="flex:1; display:flex; flex-direction:column; gap:8px">
+              <div style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#6B7079">PROJECT</div>
+              <div onClick="{{ cycleProject }}" style="height:50px; border-radius:15px; background:#1B1E23; border:1.5px solid #2C313A; padding:0 14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer">
+                <span style="font:500 14px/1 'Space Grotesk',sans-serif; color:#F2F3EE">{{ project }}</span>
+                <span style="font:400 11px/1 'Space Grotesk',sans-serif; color:#6B7079">▾</span>
+              </div>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; gap:8px">
+              <div style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#6B7079">TASK</div>
+              <div onClick="{{ cycleTask }}" style="height:50px; border-radius:15px; background:#1B1E23; border:1.5px solid #2C313A; padding:0 14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer">
+                <span style="font:500 14px/1 'Space Grotesk',sans-serif; color:#F2F3EE">{{ task }}</span>
+                <span style="font:400 11px/1 'Space Grotesk',sans-serif; color:#6B7079">▾</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:8px">
+            <div style="display:flex; justify-content:space-between; align-items:center">
+              <span style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#6B7079">SUMMARY</span>
+              <sc-if value="{{ summaryEdited }}" hint-placeholder-val="{{ false }}">
+                <span style="font:500 11px/1 'Space Grotesk',sans-serif; color:#FF9E6B">Edited by hand</span>
+              </sc-if>
+            </div>
+            <sc-if value="{{ dayGenerating }}" hint-placeholder-val="{{ false }}">
+              <div style="min-height:132px; border-radius:16px; background:#1B1E23; border:1.5px solid #2C313A; padding:16px; display:flex; flex-direction:column; gap:12px">
+                <div style="display:flex; align-items:center; gap:9px">
+                  <span style="width:14px; height:14px; border-radius:50%; border:2px solid #2C313A; border-top-color:#C6E82F; animation:tt-spin .9s linear infinite"></span>
+                  <span style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#C6E82F">GENERATING</span>
+                </div>
+                <div style="height:12px; border-radius:6px; background:#23272E; width:90%; animation:tt-pulse 1.6s ease-in-out infinite"></div>
+                <div style="height:12px; border-radius:6px; background:#23272E; width:70%; animation:tt-pulse 1.6s ease-in-out .2s infinite"></div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ dayNotGenerating }}" hint-placeholder-val="{{ true }}">
+              <textarea value="{{ summary }}" onChange="{{ setSummary }}" style="min-height:132px; border-radius:16px; background:#1B1E23; border:1.5px solid #2C313A; padding:16px; font:400 15px/1.55 'Space Grotesk',sans-serif; color:#F2F3EE; outline:none; resize:none"></textarea>
+            </sc-if>
+            <div onClick="{{ regenerate }}" style="height:48px; border-radius:15px; border:1.5px solid #2C313A; display:flex; align-items:center; justify-content:center; gap:8px; font:600 14px/1 'Space Grotesk',sans-serif; color:#C6E82F; cursor:pointer">Regenerate summary</div>
+          </div>
+
+          <div onClick="{{ toggleDayOff }}" style="border-top:1px solid #2C313A; padding-top:16px; display:flex; align-items:center; justify-content:space-between; min-height:44px; cursor:pointer">
+            <span style="font:500 15px/1 'Space Grotesk',sans-serif; color:#C9CCD2">{{ convertLabel }}</span>
+            <span style="font:400 15px/1 'Space Grotesk',sans-serif; color:#6B7079">›</span>
+          </div>
+          <sc-if value="{{ dayIsOff }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex; flex-direction:column; gap:8px">
+              <div style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#6B7079">REASON</div>
+              <input value="{{ reason }}" onChange="{{ setReason }}" placeholder="Public holiday, sick, annual leave…" style="height:50px; border-radius:15px; background:#1B1E23; border:1.5px solid #2C313A; padding:0 14px; font:400 15px/1 'Space Grotesk',sans-serif; color:#F2F3EE; outline:none" />
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isExport }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:1; overflow:auto; padding:8px 20px 20px; display:flex; flex-direction:column; gap:20px">
+          <div style="font:700 28px/1 'Space Grotesk',sans-serif; letter-spacing:-.02em; color:#F2F3EE">Export</div>
+
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <div style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#6B7079">RANGE</div>
+            <div style="display:flex; flex-direction:column; gap:8px">
+              <sc-for list="{{ presets }}" as="p" hint-placeholder-count="3">
+                <div onClick="{{ p.pick }}" style="min-height:52px; border-radius:15px; background:{{ p.bg }}; border:1.5px solid {{ p.bc }}; padding:0 16px; display:flex; align-items:center; justify-content:space-between; cursor:pointer">
+                  <span style="font:600 15px/1 'Space Grotesk',sans-serif; color:{{ p.fg }}">{{ p.label }}</span>
+                  <span style="font:400 12px/1 'JetBrains Mono',monospace; color:{{ p.sub }}">{{ p.range }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <div style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#6B7079">FORMAT</div>
+            <div style="display:flex; gap:8px">
+              <div onClick="{{ pickXlsx }}" style="flex:1; height:52px; border-radius:15px; background:{{ xlsxBg }}; border:1.5px solid {{ xlsxBc }}; display:flex; align-items:center; justify-content:center; font:600 15px/1 'Space Grotesk',sans-serif; color:{{ xlsxFg }}; cursor:pointer">Excel</div>
+              <div onClick="{{ pickCsv }}" style="flex:1; height:52px; border-radius:15px; background:{{ csvBg }}; border:1.5px solid {{ csvBc }}; display:flex; align-items:center; justify-content:center; font:600 15px/1 'Space Grotesk',sans-serif; color:{{ csvFg }}; cursor:pointer">CSV</div>
+            </div>
+          </div>
+
+          <div style="background:#1B1E23; border:1px solid #2C313A; border-radius:20px; padding:18px; display:flex; flex-direction:column; gap:14px">
+            <div style="font:500 11px/1 'JetBrains Mono',monospace; letter-spacing:.14em; color:#6B7079">BEFORE YOU SEND</div>
+            <div style="display:flex; gap:26px">
+              <div style="display:flex; flex-direction:column; gap:4px">
+                <span style="font:700 26px/1 'JetBrains Mono',monospace; color:#F2F3EE">{{ previewDays }}</span>
+                <span style="font:400 12px/1 'Space Grotesk',sans-serif; color:#9A9FA8">days in range</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:4px">
+                <span style="font:700 26px/1 'JetBrains Mono',monospace; color:#C6E82F">{{ previewHours }}</span>
+                <span style="font:400 12px/1 'Space Grotesk',sans-serif; color:#9A9FA8">total hours</span>
+              </div>
+            </div>
+            <div style="font:400 12px/1.45 'Space Grotesk',sans-serif; color:#6B7079">{{ previewNote }}</div>
+          </div>
+
+          <sc-if value="{{ exportErr }}" hint-placeholder-val="{{ false }}">
+            <div style="border-radius:16px; background:#2A1A18; border:1px solid #5A2A22; padding:14px 16px; display:flex; flex-direction:column; gap:6px">
+              <div style="font:600 13px/1 'Space Grotesk',sans-serif; color:#FF8A6B">Couldn’t build the file</div>
+              <div style="font:400 13px/1.45 'Space Grotesk',sans-serif; color:#D8A79A">The server didn’t respond. Your hours are safe — try again in a moment.</div>
+            </div>
+          </sc-if>
+
+          <div onClick="{{ download }}" style="min-height:60px; border-radius:18px; background:{{ dlBg }}; display:flex; align-items:center; justify-content:center; gap:10px; font:700 17px/1 'Space Grotesk',sans-serif; color:{{ dlFg }}; cursor:pointer">
+            <sc-if value="{{ downloading }}" hint-placeholder-val="{{ false }}">
+              <span style="width:16px; height:16px; border-radius:50%; border:2px solid rgba(22,24,28,.3); border-top-color:#16181C; animation:tt-spin .9s linear infinite"></span>
+            </sc-if>
+            <span>{{ dlLabel }}</span>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showNav }}" hint-placeholder-val="{{ false }}">
+        <div style="flex:none; height:80px; padding:0 12px 22px; border-top:1px solid #1E2228; background:#101215; display:flex; align-items:flex-start">
+          <sc-for list="{{ nav }}" as="n" hint-placeholder-count="3">
+            <div onClick="{{ n.go }}" style="flex:1; height:56px; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; cursor:pointer">
+              <div style="width:18px; height:18px; border-radius:5px; border:2px solid {{ n.fg }}; background:{{ n.dot }}"></div>
+              <div style="font:600 11px/1 'Space Grotesk',sans-serif; letter-spacing:.02em; color:{{ n.fg }}">{{ n.label }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ warn }}" hint-placeholder-val="{{ false }}">
+        <div style="position:absolute; inset:0; background:rgba(8,9,11,.72); display:flex; align-items:flex-end; padding:20px">
+          <div style="width:100%; background:#1B1E23; border:1px solid #2C313A; border-radius:24px; padding:22px; display:flex; flex-direction:column; gap:12px">
+            <div style="font:700 19px/1.25 'Space Grotesk',sans-serif; color:#F2F3EE">Overwrite your edits?</div>
+            <div style="font:400 14px/1.5 'Space Grotesk',sans-serif; color:#9A9FA8">You’ve changed this summary by hand since it was generated. Regenerating replaces what you wrote.</div>
+            <div style="display:flex; flex-direction:column; gap:8px; padding-top:4px">
+              <div onClick="{{ confirmRegen }}" style="height:52px; border-radius:16px; background:#C6E82F; display:flex; align-items:center; justify-content:center; font:700 16px/1 'Space Grotesk',sans-serif; color:#16181C; cursor:pointer">Regenerate anyway</div>
+              <div onClick="{{ cancelRegen }}" style="height:52px; border-radius:16px; border:1.5px solid #2C313A; display:flex; align-items:center; justify-content:center; font:500 16px/1 'Space Grotesk',sans-serif; color:#C9CCD2; cursor:pointer">Keep my version</div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; width:230px">
+    <div style="font:500 10px/1 'JetBrains Mono',monospace; letter-spacing:.18em; color:#6B7079">JUMP TO A STATE</div>
+    <sc-for list="{{ jumps }}" as="j" hint-placeholder-count="12">
+      <div onClick="{{ j.go }}" style="min-height:44px; border-radius:12px; background:{{ j.bg }}; border:1px solid {{ j.bc }}; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:pointer">
+        <span style="font:500 13px/1.3 'Space Grotesk',sans-serif; color:{{ j.fg }}">{{ j.label }}</span>
+        <span style="font:400 10px/1 'JetBrains Mono',monospace; color:{{ j.sub }}">{{ j.kind }}</span>
+      </div>
+    </sc-for>
+    <div onClick="{{ toggleOffline }}" style="min-height:44px; margin-top:6px; border-radius:12px; border:1px solid #2C313A; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer">
+      <span style="font:500 13px/1 'Space Grotesk',sans-serif; color:#C9CCD2">Offline banner</span>
+      <span style="font:500 11px/1 'JetBrains Mono',monospace; color:{{ offlineFg }}">{{ offlineLabel }}</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+const PROJECTS = ["Northwind", "Northwind — Phase 2", "Internal"];
+const TASKS = ["Development", "Design", "Meetings", "QA"];
+const GEN = "Continued work on the billing timesheet: wired the clock-in flow to the hours API, reviewed the month totals with Dana, and started the export preview.";
+
+class Component extends DCLogic {
+  state = {
+    screen: "login", user: "sam@studio", pw: "", pwErr: false,
+    todayState: "idle", elapsed: 15158, todo: "", offline: false,
+    monthOffset: 0, calMode: "ready",
+    selDay: 7, dayHours: "8.0", hoursOverridden: false,
+    project: PROJECTS[0], task: TASKS[0],
+    summary: GEN, summaryEdited: false, warn: false, dayGenerating: false,
+    dayOff: false, reason: "",
+    preset: "This month", format: "Excel", exportErr: false, downloading: false
+  };
+
+  componentDidMount() {
+    this._t = setInterval(() => {
+      if (this.state.todayState === "running") this.setState(s => ({ elapsed: s.elapsed + 1 }));
+    }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this._t); clearTimeout(this._g); clearTimeout(this._d); }
+
+  hhmmss(n) {
+    const p = v => String(v).padStart(2, "0");
+    return p(Math.floor(n / 3600)) + ":" + p(Math.floor(n / 60) % 60) + ":" + p(n % 60);
+  }
+
+  monthData(offset) {
+    const base = new Date(2026, 8, 1);
+    const d = new Date(base.getFullYear(), base.getMonth() + offset, 1);
+    const y = d.getFullYear(), m = d.getMonth();
+    const label = d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+    const count = new Date(y, m + 1, 0).getDate();
+    const blanks = (new Date(y, m, 1).getDay() + 6) % 7;
+    const today = new Date(2026, 8, 7);
+    const days = [];
+    let total = 0;
+    for (let n = 1; n <= count; n++) {
+      const dt = new Date(y, m, n);
+      const wd = dt.getDay();
+      let status = "none", hours = 0;
+      if (wd === 0 || wd === 6) status = "weekend";
+      else if (dt > today) status = "none";
+      else if (dt.getTime() === today.getTime()) { status = "open"; hours = 4.2; }
+      else {
+        const k = (n * 7 + m * 3) % 17;
+        if (k === 4) status = "off";
+        else if (k === 9) status = "hol";
+        else { status = "worked"; hours = 7 + ((n * 5 + m) % 4) * 0.5; }
+      }
+      total += hours;
+      days.push({ n, status, hours });
+    }
+    return { label, blanks, days, total: Math.round(total * 10) / 10 };
+  }
+
+  cell(d) {
+    const map = {
+      worked: { bg: "#C6E82F", fg: "#16181C", numFg: "rgba(22,24,28,.6)", border: "none", tag: d.hours.toFixed(1) },
+      open: { bg: "transparent", fg: "#FF7A3D", numFg: "#FF7A3D", border: "2px dashed #FF7A3D", tag: d.hours.toFixed(1) },
+      off: { bg: "#4A8BFF", fg: "#0B1020", numFg: "rgba(11,16,32,.65)", border: "none", tag: "OFF" },
+      hol: { bg: "#B07CFF", fg: "#1A0F2E", numFg: "rgba(26,15,46,.65)", border: "none", tag: "HOL" },
+      weekend: { bg: "#15181C", fg: "transparent", numFg: "#3D444E", border: "none", tag: "" },
+      none: { bg: "#1B1E23", fg: "transparent", numFg: "#6B7079", border: "none", tag: "" }
+    };
+    return Object.assign({ n: d.n, open: () => this.openDay(d.n) }, map[d.status]);
+  }
+
+  go(screen) { this.setState({ screen, warn: false, dayGenerating: false }); }
+  jumpTo(patch) { this.setState(Object.assign({ warn: false, dayGenerating: false }, patch)); }
+
+  dayLabel(n) {
+    const base = new Date(2026, 8, 1);
+    const d = new Date(base.getFullYear(), base.getMonth() + this.state.monthOffset, n);
+    return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  }
+
+  openDay(n) {
+    const md = this.monthData(this.state.monthOffset);
+    const day = md.days.find(x => x.n === n) || { status: "none", hours: 0 };
+    this.setState({
+      warn: false, dayGenerating: false,
+      screen: "day", selDay: n, dayOff: day.status === "off" || day.status === "hol",
+      dayHours: day.hours ? day.hours.toFixed(1) : "0.0", hoursOverridden: false,
+      summary: day.status === "worked" || day.status === "open" ? GEN : "",
+      summaryEdited: false, reason: day.status === "hol" ? "Public holiday" : ""
+    });
+  }
+
+  toggleClock() {
+    if (this.state.todayState === "idle") this.setState({ todayState: "running", elapsed: 0 });
+    else if (this.state.todayState === "running") {
+      this.setState({ todayState: "generating" });
+      this._g = setTimeout(() => this.setState({ todayState: "done", summary: GEN, summaryEdited: false }), 2400);
+    }
+  }
+
+  renderVals() {
+    const s = this.state;
+    const md = this.monthData(s.monthOffset);
+    const sel = ["#C6E82F", "#16181C"];
+    const chip = on => ({
+      bg: on ? "#C6E82F" : "#1B1E23", bc: on ? "#C6E82F" : "#2C313A",
+      fg: on ? "#16181C" : "#F2F3EE", sub: on ? "rgba(22,24,28,.6)" : "#6B7079"
+    });
+    const primary = {
+      idle: { label: "Clock In", primaryBg: "#C6E82F", primaryFg: "#16181C", primaryBorder: "none" },
+      running: { label: "Clock Out", primaryBg: "#C6E82F", primaryFg: "#16181C", primaryBorder: "none" },
+      generating: { label: "", primaryBg: "", primaryFg: "", primaryBorder: "" },
+      done: { label: "", primaryBg: "", primaryFg: "", primaryBorder: "" }
+    }[s.todayState];
+
+    const jump = (label, kind, fn, active) => ({
+      label, kind, go: fn,
+      bg: active ? "#23272E" : "transparent", bc: active ? "#3A414C" : "#2C313A",
+      fg: active ? "#F2F3EE" : "#9A9FA8", sub: active ? "#C6E82F" : "#4E545E"
+    });
+
+    const presetHours = { "This month": md.total, "Last month": this.monthData(s.monthOffset - 1).total, "Custom range": 96.5 };
+    const presetDays = { "This month": 21, "Last month": 22, "Custom range": 12 };
+
+    return {
+      offline: s.offline,
+      offlineLabel: s.offline ? "ON" : "OFF",
+      offlineFg: s.offline ? "#FF7A3D" : "#6B7079",
+      toggleOffline: () => this.setState({ offline: !s.offline }),
+
+      isLogin: s.screen === "login", isToday: s.screen === "today",
+      isCal: s.screen === "cal", isDay: s.screen === "day", isExport: s.screen === "export",
+      showNav: s.screen !== "login",
+
+      user: s.user, pw: s.pw, pwErr: s.pwErr,
+      userBorder: "#2C313A", pwBorder: s.pwErr ? "#FF6B4A" : "#2C313A",
+      setUser: e => this.setState({ user: e.target.value }),
+      setPw: e => this.setState({ pw: e.target.value, pwErr: false }),
+      signIn: () => s.pw.length >= 4 ? this.setState({ screen: "today", pwErr: false }) : this.setState({ pwErr: true }),
+
+      todayLabel: "MON 7 SEP",
+      tIdle: s.todayState === "idle", tRunning: s.todayState === "running",
+      tGenerating: s.todayState === "generating", tDone: s.todayState === "done",
+      showPrimary: s.todayState === "idle" || s.todayState === "running",
+      primaryLabel: primary.label, primaryBg: primary.primaryBg,
+      primaryFg: primary.primaryFg, primaryBorder: primary.primaryBorder,
+      elapsed: this.hhmmss(s.elapsed),
+      clockInTime: "09:02", clockOutTime: "17:34",
+      genHours: (Math.max(s.elapsed, 1) / 3600).toFixed(1),
+      doneHours: (Math.max(s.elapsed, 1) / 3600).toFixed(1),
+      todo: s.todo, setTodo: e => this.setState({ todo: e.target.value }),
+      toggleClock: () => this.toggleClock(),
+      markOff: () => this.openDay(7),
+      markHol: () => this.openDay(7),
+      reset: () => this.setState({ todayState: "idle", elapsed: 0 }),
+      openToday: () => this.openDay(7),
+
+      monthLabel: md.label, monthTotal: md.total.toFixed(1),
+      blanks: Array.from({ length: md.blanks }, (_, i) => i),
+      skeletons: Array.from({ length: 35 }, (_, i) => i),
+      days: md.days.map(d => this.cell(d)),
+      calLoading: s.calMode === "loading", calEmpty: s.calMode === "empty", calReady: s.calMode === "ready",
+      prevMonth: () => this.setState({ monthOffset: s.monthOffset - 1, calMode: "ready" }),
+      nextMonth: () => this.setState({ monthOffset: s.monthOffset + 1, calMode: "ready" }),
+
+      dayTitle: this.dayLabel(s.selDay),
+      dayStateLabel: s.dayOff ? "TIME OFF" : "WORKED DAY",
+      dayStateFg: s.dayOff ? "#4A8BFF" : "#C6E82F",
+      dayHours: s.dayHours, hoursOverridden: s.hoursOverridden,
+      setDayHours: e => this.setState({ dayHours: e.target.value, hoursOverridden: true }),
+      project: s.project, task: s.task,
+      cycleProject: () => this.setState({ project: PROJECTS[(PROJECTS.indexOf(s.project) + 1) % PROJECTS.length] }),
+      cycleTask: () => this.setState({ task: TASKS[(TASKS.indexOf(s.task) + 1) % TASKS.length] }),
+      summary: s.summary, summaryEdited: s.summaryEdited,
+      setSummary: e => this.setState({ summary: e.target.value, summaryEdited: true }),
+      dayGenerating: s.dayGenerating, dayNotGenerating: !s.dayGenerating,
+      regenerate: () => s.summaryEdited ? this.setState({ warn: true }) : this.doRegen(),
+      warn: s.warn,
+      confirmRegen: () => { this.setState({ warn: false }); this.doRegen(); },
+      cancelRegen: () => this.setState({ warn: false }),
+      dayIsOff: s.dayOff, reason: s.reason,
+      setReason: e => this.setState({ reason: e.target.value }),
+      convertLabel: s.dayOff ? "Convert back to a worked day" : "Convert to time off or holiday",
+      toggleDayOff: () => this.setState({ dayOff: !s.dayOff }),
+      backToCal: () => this.jumpTo({ screen: "cal" }),
+
+      presets: ["This month", "Last month", "Custom range"].map(label => Object.assign(
+        { label, range: label === "Custom range" ? "Pick dates" : "1 – 30", pick: () => this.setState({ preset: label, exportErr: false }) },
+        chip(s.preset === label)
+      )),
+      xlsxBg: chip(s.format === "Excel").bg, xlsxBc: chip(s.format === "Excel").bc, xlsxFg: chip(s.format === "Excel").fg,
+      csvBg: chip(s.format === "CSV").bg, csvBc: chip(s.format === "CSV").bc, csvFg: chip(s.format === "CSV").fg,
+      pickXlsx: () => this.setState({ format: "Excel" }),
+      pickCsv: () => this.setState({ format: "CSV" }),
+      previewDays: presetDays[s.preset], previewHours: presetHours[s.preset].toFixed(1),
+      previewNote: s.preset + ", as " + s.format + ". Days marked time off or holiday are listed with zero hours.",
+      exportErr: s.exportErr, downloading: s.downloading,
+      dlBg: s.downloading ? "#8FA820" : "#C6E82F", dlFg: "#16181C",
+      dlLabel: s.downloading ? "Building the file…" : "Download " + s.format,
+      download: () => {
+        if (s.downloading) return;
+        this.setState({ downloading: true, exportErr: false });
+        this._d = setTimeout(() => this.setState({ downloading: false }), 1600);
+      },
+
+      jumps: [
+        jump("Login", "SCREEN", () => this.jumpTo({ screen: "login", pwErr: false }), s.screen === "login" && !s.pwErr),
+        jump("Login — wrong password", "ERROR", () => this.jumpTo({ screen: "login", pwErr: true }), s.screen === "login" && s.pwErr),
+        jump("Today — not clocked in", "SCREEN", () => this.jumpTo({ screen: "today", todayState: "idle" }), s.screen === "today" && s.todayState === "idle"),
+        jump("Today — clocked in", "SCREEN", () => this.jumpTo({ screen: "today", todayState: "running", elapsed: 15158 }), s.screen === "today" && s.todayState === "running"),
+        jump("Today — generating", "LOADING", () => this.jumpTo({ screen: "today", todayState: "generating" }), s.screen === "today" && s.todayState === "generating"),
+        jump("Today — day complete", "SCREEN", () => this.jumpTo({ screen: "today", todayState: "done", elapsed: 30720 }), s.screen === "today" && s.todayState === "done"),
+        jump("Calendar", "SCREEN", () => this.jumpTo({ screen: "cal", calMode: "ready" }), s.screen === "cal" && s.calMode === "ready"),
+        jump("Calendar — loading", "LOADING", () => this.jumpTo({ screen: "cal", calMode: "loading" }), s.screen === "cal" && s.calMode === "loading"),
+        jump("Calendar — empty month", "EMPTY", () => this.jumpTo({ screen: "cal", calMode: "empty" }), s.screen === "cal" && s.calMode === "empty"),
+        jump("Day detail", "SCREEN", () => this.openDay(4), s.screen === "day" && !s.dayGenerating && !s.warn),
+        jump("Day detail — generating", "LOADING", () => this.jumpTo({ screen: "day", dayGenerating: true }), s.screen === "day" && s.dayGenerating),
+        jump("Regenerate warning", "DIALOG", () => this.jumpTo({ screen: "day", summaryEdited: true, warn: true }), s.warn),
+        jump("Export", "SCREEN", () => this.jumpTo({ screen: "export", exportErr: false }), s.screen === "export" && !s.exportErr),
+        jump("Export — failed", "ERROR", () => this.jumpTo({ screen: "export", exportErr: true, downloading: false }), s.screen === "export" && s.exportErr)
+      ],
+
+      nav: [
+        { label: "Today", key: "today" }, { label: "Calendar", key: "cal" }, { label: "Export", key: "export" }
+      ].map(n => {
+        const on = s.screen === n.key || (n.key === "cal" && s.screen === "day");
+        return { label: n.label, go: () => this.go(n.key), fg: on ? "#C6E82F" : "#6B7079", dot: on ? "#C6E82F" : "transparent" };
+      })
+    };
+  }
+
+  doRegen() {
+    this.setState({ dayGenerating: true });
+    this._g = setTimeout(() => this.setState({ dayGenerating: false, summary: GEN, summaryEdited: false }), 2000);
+  }
+}
+</script>
+</body>
+</html>

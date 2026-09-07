@@ -1,0 +1,17 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  background: var(--bg);
+}
+
+.statusSpacer {
+  flex-shrink: 0;
+  height: var(--safe-top);
+}
+
+.scrollArea {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}

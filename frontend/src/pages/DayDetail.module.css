@@ -1,0 +1,308 @@
+.content {
+  padding: 8px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.backButton {
+  width: 44px;
+  height: 44px;
+  margin-left: -10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 20px;
+  color: var(--ink-muted);
+  flex-shrink: 0;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dateTitle {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--ink);
+  margin: 0;
+}
+
+.stateEyebrow {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.stateEyebrow.work {
+  color: var(--worked);
+}
+
+.stateEyebrow.off {
+  color: var(--time-off);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.editedTag {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--edited-text);
+}
+
+.hoursRow {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.hoursInput {
+  width: 110px;
+  height: 54px;
+  border-radius: 15px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--ink);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.hoursExplain {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-faint);
+  margin: 0;
+}
+
+.overriddenNote {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--edited-text);
+  margin: 6px 0 0;
+}
+
+.pickerRow {
+  display: flex;
+  gap: 10px;
+}
+
+.pickerField {
+  flex: 1;
+  height: 50px;
+  border-radius: 15px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  padding: 0 14px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.pickerField::placeholder {
+  color: var(--ink-faint);
+}
+
+.textarea {
+  min-height: 132px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  padding: 16px;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink);
+  resize: none;
+  width: 100%;
+}
+
+.generatingBox {
+  min-height: 132px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.generatingRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skeletonStackSmall {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.regenerateButton {
+  height: 48px;
+  border-radius: 15px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--primary);
+}
+
+.convertRow {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.convertLabel {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--ink-muted);
+}
+
+.chevron {
+  color: var(--ink-faint);
+  font-family: var(--font-sans);
+}
+
+.convertChoices {
+  display: flex;
+  gap: 10px;
+}
+
+.convertChoiceButton {
+  flex: 1;
+  height: 46px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+.reasonInput {
+  height: 50px;
+  border-radius: 15px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  padding: 0 16px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--ink);
+  width: 100%;
+}
+
+.reasonInput::placeholder {
+  color: var(--ink-faint);
+}
+
+/* Confirmation sheet */
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 9, 11, 0.72);
+  display: flex;
+  align-items: flex-end;
+  z-index: 10;
+}
+
+.sheet {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px 24px 0 0;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sheetTitle {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 19px;
+  line-height: 1.25;
+  color: var(--ink);
+  margin: 0;
+}
+
+.sheetBody {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-dim);
+  margin: 0;
+}
+
+.sheetPrimary {
+  height: 52px;
+  border-radius: 16px;
+  background: var(--primary);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--on-primary);
+}
+
+.sheetSecondary {
+  height: 52px;
+  border-radius: 16px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 16px;
+  color: var(--ink-muted);
+}
