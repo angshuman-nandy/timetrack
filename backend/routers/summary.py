@@ -7,7 +7,7 @@ re-checks.
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from backend import storage
 from backend.auth import get_current_user
@@ -15,11 +15,18 @@ from backend.config import get_settings
 from backend.db import get_session
 from backend.llm.base import SummaryUnavailable
 from backend.llm.factory import build_provider
-from backend.models import DayEntry
+from backend.models import Activity, DayEntry
 from backend.routers.entries import EntryOut
-from backend.timezone import utcnow
+from backend.timezone import app_tz, utcnow
 
 router = APIRouter(prefix="/api", tags=["summary"], dependencies=[Depends(get_current_user)])
+
+
+def _activity_lines(session: Session, date: str) -> list[str]:
+    rows = session.exec(
+        select(Activity).where(Activity.date == date).order_by(Activity.created_at)
+    ).all()
+    return [f"{a.created_at.astimezone(app_tz()):%H:%M} — {a.text}" for a in rows]
 
 
 @router.post("/entries/{date}/summarize", response_model=EntryOut)
@@ -36,6 +43,7 @@ def summarize_entry(date: str, session: Session = Depends(get_session)) -> Entry
             project=row.project,
             task=row.task,
             hours=row.hours,
+            activities=_activity_lines(session, date),
         )
     except SummaryUnavailable as exc:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(exc)) from exc

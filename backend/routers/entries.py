@@ -15,8 +15,8 @@ from sqlmodel import Session, select
 from backend import storage
 from backend.auth import get_current_user
 from backend.db import get_session
-from backend.models import DayEntry, DayKind
-from backend.timezone import parse_date_str, today_str, utcnow
+from backend.models import Activity, DayEntry, DayKind
+from backend.timezone import app_tz, parse_date_str, today_str, utcnow
 
 router = APIRouter(prefix="/api", tags=["entries"], dependencies=[Depends(get_current_user)])
 
@@ -73,6 +73,12 @@ class EntryPatch(BaseModel):
     time_off_reason: str | None = None
 
 
+class BulkKindRequest(BaseModel):
+    dates: list[str]
+    kind: DayKind
+    reason: str | None = None
+
+
 def _get_or_404(session: Session, date_str: str) -> DayEntry:
     row = session.get(DayEntry, date_str)
     if row is None:
@@ -90,6 +96,36 @@ def _commit_and_sync(session: Session, row: DayEntry) -> DayEntry:
     session.commit()
     session.refresh(row)
     storage.backup_now()
+    return row
+
+
+def _clear_activities(session: Session, date_str: str) -> None:
+    for activity in session.exec(select(Activity).where(Activity.date == date_str)).all():
+        session.delete(activity)
+
+
+def _apply_kind(session: Session, row: DayEntry, kind: DayKind, reason: str | None) -> DayEntry:
+    """Shared by the dedicated time-off endpoint, patch_entry (editing a day's kind
+    in place), and bulk-kind — one place decides what changing a day's kind does."""
+    row.kind = kind
+    row.time_off_reason = reason if kind != DayKind.work else None
+
+    if kind != DayKind.work:
+        # No longer a worked day — clear the fields that only make sense for one, and
+        # the activity board along with them (they'd otherwise dangle, orphaned from
+        # any UI, and re-surface if the day is ever converted back to work).
+        row.clock_in = None
+        row.clock_out = None
+        row.plan_text = None
+        row.work_text = None
+        row.summary = None
+        row.summary_model = None
+        row.summary_generated_at = None
+        row.edited = False
+        if not row.hours_overridden:
+            row.hours = 0.0
+        _clear_activities(session, row.date)
+
     return row
 
 
@@ -149,7 +185,19 @@ def clock_out(body: ClockOutRequest, session: Session = Depends(get_session)) ->
         raise HTTPException(status.HTTP_409_CONFLICT, f"Already clocked out for {date_str}.")
 
     row.clock_out = utcnow()
-    row.work_text = body.work_text
+    if body.work_text:
+        row.work_text = body.work_text
+    else:
+        # No explicit end-of-day notes — fall back to the activity board, so the
+        # export/LLM path (which reads work_text) still has something for a day
+        # logged entirely through the board.
+        activities = session.exec(
+            select(Activity).where(Activity.date == date_str).order_by(Activity.created_at)
+        ).all()
+        row.work_text = (
+            "\n".join(f"{a.created_at.astimezone(app_tz()):%H:%M} — {a.text}" for a in activities)
+            or None
+        )
     if not row.hours_overridden:
         row.hours = _round_hours(row.clock_in, row.clock_out)
 
@@ -160,7 +208,13 @@ def clock_out(body: ClockOutRequest, session: Session = Depends(get_session)) ->
 def patch_entry(
     date: str, body: EntryPatch, session: Session = Depends(get_session)
 ) -> EntryOut:
-    row = _get_or_404(session, date)
+    # Upsert, not _get_or_404: editing a blank past date from the calendar is a normal
+    # flow (GET /entries/{date} returns a synthetic empty row for one with no data, so
+    # the frontend has nothing else to PATCH against).
+    parse_date_str(date)
+    row = session.get(DayEntry, date)
+    if row is None:
+        row = DayEntry(date=date)
 
     # exclude_unset, not just "not None" — a client sending {"clock_out": null} means
     # "clear this field" (e.g. Day detail's "Reopen the day"), which must be
@@ -169,6 +223,14 @@ def patch_entry(
 
     if "hours" in updates:
         row.hours_overridden = updates["hours"] is not None
+
+    if "kind" in updates:
+        # Route through _apply_kind so switching kind via a plain PATCH (Day detail's
+        # Work/Time off/Holiday control) has the same side effects as the dedicated
+        # /time-off endpoint — clearing work-only fields and the activity board.
+        kind = updates.pop("kind")
+        reason = updates.pop("time_off_reason", row.time_off_reason)
+        _apply_kind(session, row, kind, reason)
 
     for field, value in updates.items():
         setattr(row, field, value)
@@ -182,6 +244,7 @@ def patch_entry(
 @router.delete("/entries/{date}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_entry(date: str, session: Session = Depends(get_session)) -> None:
     row = _get_or_404(session, date)
+    _clear_activities(session, date)
     session.delete(row)
     session.commit()
     storage.backup_now()
@@ -197,20 +260,29 @@ def set_time_off(
     if row is None:
         row = DayEntry(date=date)
 
-    row.kind = body.kind
-    row.time_off_reason = body.reason if body.kind != DayKind.work else None
-
-    if body.kind != DayKind.work:
-        # No longer a worked day — clear the fields that only make sense for one.
-        row.clock_in = None
-        row.clock_out = None
-        row.plan_text = None
-        row.work_text = None
-        row.summary = None
-        row.summary_model = None
-        row.summary_generated_at = None
-        row.edited = False
-        if not row.hours_overridden:
-            row.hours = 0.0
+    _apply_kind(session, row, body.kind, body.reason)
 
     return EntryOut.from_row(date, _commit_and_sync(session, row))
+
+
+@router.post("/entries/bulk-kind")
+def bulk_set_kind(
+    body: BulkKindRequest, session: Session = Depends(get_session)
+) -> dict:
+    """Calendar multi-select → mark a (possibly non-contiguous) set of days as time off
+    or holiday in one request. One commit and one bucket sync for the whole batch —
+    the entire reason this exists instead of looping the single-day endpoint client-side."""
+    updated = 0
+    for date_str in body.dates:
+        parse_date_str(date_str)  # 400s on a malformed date before touching the DB
+        row = session.get(DayEntry, date_str)
+        if row is None:
+            row = DayEntry(date=date_str)
+        _apply_kind(session, row, body.kind, body.reason)
+        row.updated_at = utcnow()
+        session.add(row)
+        updated += 1
+
+    session.commit()
+    storage.backup_now()
+    return {"updated": updated}

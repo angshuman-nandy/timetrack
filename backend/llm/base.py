@@ -30,11 +30,17 @@ class SummaryProvider(Protocol):
         project: str | None,
         task: str | None,
         hours: float | None,
+        activities: list[str] = (),
     ) -> SummaryResult: ...
 
 
 def build_prompt(
-    plan_text: str | None, work_text: str | None, project: str | None, task: str | None, hours: float | None
+    plan_text: str | None,
+    work_text: str | None,
+    project: str | None,
+    task: str | None,
+    hours: float | None,
+    activities: list[str] = (),
 ) -> str:
     lines = ["Write a brief, client-ready description of a day's billable work."]
     if project:
@@ -43,8 +49,15 @@ def build_prompt(
         lines.append(f"Task: {task}")
     if hours is not None:
         lines.append(f"Hours logged: {hours}")
-    lines.append(f"Morning plan / to-do list: {plan_text or '(none given)'}")
-    lines.append(f"End-of-day notes on what was actually done: {work_text or '(none given)'}")
+    if activities:
+        # The activity board is the primary evidence when present — a timestamped log
+        # of what was actually done, added over the course of the day.
+        lines.append("Timestamped log of what was done today:")
+        lines.extend(f"  - {a}" for a in activities)
+    else:
+        # Fallback for a day with no board entries (e.g. hours typed in by hand).
+        lines.append(f"Morning plan / to-do list: {plan_text or '(none given)'}")
+        lines.append(f"End-of-day notes on what was actually done: {work_text or '(none given)'}")
     lines.append(
         "\nWrite 1-3 sentences, past tense, professional but plain — the kind of line "
         "that goes directly onto an hourly invoice. No headers, no bullet points, no "

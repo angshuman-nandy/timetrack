@@ -117,6 +117,21 @@ timetrack/
 
 **`app_meta`** — key/value: `schema_version`, `last_backup_at`.
 
+**`activity`** — the activity board: short one-liners logged against a date over the
+course of a day, added from Today (while clocked in) or Day detail (editing a past day).
+The full list for a date is what gets fed to the LLM at clock-out/summarize, replacing a
+single end-of-day textarea.
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | int (PK) | |
+| `date` | str | `YYYY-MM-DD`, same key space as `day_entry.date` |
+| `text` | str | one activity, e.g. "Reviewed PR #412" |
+| `created_at` | datetime | UTC-stored; formatted `HH:MM` in `APP_TIMEZONE` for display/prompt |
+
+Deleting a `day_entry`, or converting it to `time_off`/`holiday`, cascades to delete that
+date's activities — they only make sense against a worked day.
+
 ---
 
 ## API
@@ -131,10 +146,22 @@ POST   /api/clock-out               {date?, work_text?}
 PATCH  /api/entries/{date}          partial update of any field
 DELETE /api/entries/{date}
 POST   /api/entries/{date}/time-off {kind, reason}
+POST   /api/entries/bulk-kind       {dates: [], kind, reason} → mark many days at once
+                                     (calendar multi-select); one commit + one bucket
+                                     sync for the whole batch
 POST   /api/entries/{date}/summarize
+GET    /api/entries/{date}/activities
+POST   /api/entries/{date}/activities   {text}
+DELETE /api/activities/{id}
+DELETE /api/entries/{date}/activities   clear the whole board for a date
 GET    /api/export?start=&end=&format=xlsx|csv
 GET    /api/health                  no auth; used by Docker/HF health checks
 ```
+
+`PATCH /api/entries/{date}` upserts: a date with no row yet creates one (Calendar → tap a
+blank past day → fill in hours by hand). A patch that includes `kind` goes through the
+same "switching kind clears work-only fields and the activity board" path as the
+dedicated `/time-off` endpoint.
 
 All routes but `login` and `health` require `Authorization: Bearer <JWT>`.
 
@@ -168,13 +195,14 @@ stored in UTC and converted at the edges.
 `POST /api/entries/{date}/summarize` sends `plan_text`, `work_text`, `project`, `task`,
 `hours` and requests structured JSON back: `{summary, suggested_project, suggested_task}`.
 
-- **`LLM_PROVIDER=anthropic`** (default) — `anthropic` Python SDK, model `claude-haiku-4-5`
-  ($1 / $5 per MTok — at one summary a day, cents per year). Uses `output_config.format`
-  for structured output; no extended thinking needed for a task this small.
-- **`LLM_PROVIDER=openai`** — `openai` SDK, model from `LLM_MODEL`. The exact current
-  mini-tier model id gets confirmed at build time rather than hardcoded now.
-- **No key configured, or the call fails:** the endpoint returns a clear 503; the UI falls
-  back to a plain editable text field. The app is fully usable with zero LLM spend.
+- **Automatic fallback chain, not a manual switch:** `OPENAI_API_KEY` set → OpenAI
+  (`gpt-4o-mini` by default) is tried first. If that call fails for any reason — no
+  credit, a rate limit, any other error — it retries once against Anthropic
+  (`claude-haiku-4-5` by default) if `ANTHROPIC_API_KEY` is also set. Either key alone is
+  enough to run; see `backend/llm/factory.py`'s `FallbackProvider`.
+- **No key configured, or every configured provider fails:** the endpoint returns a clear
+  503; the UI falls back to a plain editable text field. The app is fully usable with zero
+  LLM spend.
 - A generated summary is always a draft — editing it sets `edited=true`, and regenerating
   over an edited summary asks for confirmation first.
 
@@ -224,10 +252,10 @@ JWT_SECRET=
 
 APP_TIMEZONE=Asia/Kolkata
 
-LLM_PROVIDER=anthropic
-ANTHROPIC_API_KEY=
 OPENAI_API_KEY=
-LLM_MODEL=
+OPENAI_MODEL=
+ANTHROPIC_API_KEY=
+ANTHROPIC_MODEL=
 
 DATA_DIR=/data
 DB_PATH=/tmp/timetrack.db

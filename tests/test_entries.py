@@ -124,6 +124,53 @@ def test_clock_out_without_clock_in_is_conflict(client):
     assert resp.status_code == 409
 
 
+def test_patch_upserts_a_date_with_no_row(client):
+    # Calendar: tapping a blank past date and filling in hours by hand — there's no
+    # entry yet, so this must create one rather than 404.
+    resp = client.patch("/api/entries/2026-09-11", json={"hours": 6.0, "summary": "Manual entry"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["hours"] == 6.0
+    assert body["hours_overridden"] is True
+    assert body["kind"] == "work"
+
+
+def test_patch_with_kind_holiday_clears_work_fields(client):
+    client.post("/api/clock-in", json={"date": "2026-09-12"})
+    client.post("/api/clock-out", json={"date": "2026-09-12", "work_text": "done"})
+
+    resp = client.patch(
+        "/api/entries/2026-09-12", json={"kind": "holiday", "time_off_reason": "Diwali"}
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["kind"] == "holiday"
+    assert body["time_off_reason"] == "Diwali"
+    assert body["clock_in"] is None
+    assert body["clock_out"] is None
+    assert body["hours"] == 0.0
+
+
+def test_bulk_kind_marks_non_contiguous_dates_and_overwrites_worked_day(client):
+    client.post("/api/clock-in", json={"date": "2026-09-15"})
+    client.post("/api/clock-out", json={"date": "2026-09-15", "work_text": "done"})
+
+    resp = client.post(
+        "/api/entries/bulk-kind",
+        json={"dates": ["2026-09-14", "2026-09-15", "2026-09-17"], "kind": "holiday", "reason": "Break"},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["updated"] == 3
+
+    for date_str in ("2026-09-14", "2026-09-15", "2026-09-17"):
+        body = client.get(f"/api/entries/{date_str}").json()
+        assert body["kind"] == "holiday"
+        assert body["time_off_reason"] == "Break"
+
+    # The previously-worked day had its clock times cleared.
+    assert client.get("/api/entries/2026-09-15").json()["clock_in"] is None
+
+
 def test_routes_require_auth(isolated_env, monkeypatch):
     password_hash = bcrypt.hashpw(b"pw", bcrypt.gensalt()).decode()
     monkeypatch.setenv("AUTH_PASSWORD_HASH", password_hash)

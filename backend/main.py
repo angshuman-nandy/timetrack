@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from backend import db
-from backend.routers import auth_routes, entries, export_routes, summary
+from backend.routers import activities, auth_routes, entries, export_routes, summary
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -23,6 +23,7 @@ app = FastAPI(title="TimeTrack", lifespan=lifespan)
 
 app.include_router(auth_routes.router)
 app.include_router(entries.router)
+app.include_router(activities.router)
 app.include_router(summary.router)
 app.include_router(export_routes.router)
 

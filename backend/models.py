@@ -79,3 +79,17 @@ class AppMeta(SQLModel, table=True):
 
     key: str = Field(primary_key=True)
     value: str
+
+
+class Activity(SQLModel, table=True):
+    """A single timestamped one-liner logged during a day, via the activity board on
+    Today or Day detail. The full set for a date is what gets fed to the LLM at
+    clock-out (see backend/llm/base.py::build_prompt) instead of a single end-of-day
+    textarea."""
+
+    __tablename__ = "activity"
+
+    id: int | None = Field(default=None, primary_key=True)
+    date: str = Field(index=True)  # YYYY-MM-DD, same key space as DayEntry.date
+    text: str
+    created_at: datetime = Field(default_factory=utcnow, sa_column=_utc_column())

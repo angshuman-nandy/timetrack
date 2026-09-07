@@ -1,41 +1,76 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "../components/AppShell";
+import { ActivityBoard } from "../components/ActivityBoard";
+import { ConfirmSheet } from "../components/ConfirmSheet";
 import { Spinner } from "../components/Spinner";
 import { SkeletonLines } from "../components/SkeletonLines";
 import { entriesApi } from "../api/entries";
-import type { Entry } from "../api/types";
+import type { Activity, DayKind, Entry } from "../api/types";
 import { formatClockTime, formatDayDetailDate } from "../utils/date";
 import styles from "./DayDetail.module.css";
+
+interface Draft {
+  kind: DayKind;
+  hoursText: string;
+  project: string;
+  task: string;
+  summary: string;
+  reason: string;
+}
+
+function toDraft(e: Entry): Draft {
+  return {
+    kind: e.kind ?? "work",
+    hoursText: e.hours != null ? String(e.hours) : "",
+    project: e.project ?? "",
+    task: e.task ?? "",
+    summary: e.summary ?? "",
+    reason: e.time_off_reason ?? "",
+  };
+}
+
+const KIND_LABELS: Record<DayKind, string> = {
+  work: "Work",
+  time_off: "Time off",
+  holiday: "Holiday",
+};
 
 export function DayDetail() {
   const { date = "" } = useParams();
   const navigate = useNavigate();
 
   const [entry, setEntry] = useState<Entry | null>(null);
-  const [hoursText, setHoursText] = useState("");
-  const [project, setProject] = useState("");
-  const [task, setTask] = useState("");
-  const [summary, setSummary] = useState("");
-  const [reason, setReason] = useState("");
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [generating, setGenerating] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [showConvertChoices, setShowConvertChoices] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
   useEffect(() => {
-    void entriesApi.get(date).then(hydrate);
+    void Promise.all([entriesApi.get(date), entriesApi.listActivities(date)]).then(
+      ([e, acts]) => {
+        hydrate(e);
+        setActivities(acts);
+      },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date]);
 
   function hydrate(e: Entry) {
     setEntry(e);
-    setHoursText(e.hours != null ? String(e.hours) : "");
-    setProject(e.project ?? "");
-    setTask(e.task ?? "");
-    setSummary(e.summary ?? "");
-    setReason(e.time_off_reason ?? "");
+    setDraft(toDraft(e));
   }
 
-  if (!entry) {
+  const dirty = useMemo(() => {
+    if (!entry || !draft) return false;
+    const saved = toDraft(entry);
+    return (Object.keys(draft) as (keyof Draft)[]).some((k) => draft[k] !== saved[k]);
+  }, [entry, draft]);
+
+  if (!entry || !draft) {
     return (
       <AppShell>
         <div className={styles.content}>
@@ -45,43 +80,55 @@ export function DayDetail() {
     );
   }
 
-  const isWork = entry.kind === "work";
+  const isWork = draft.kind === "work";
 
-  async function saveField(patch: Partial<Entry>) {
-    const updated = await entriesApi.patch(date, patch);
-    hydrate(updated);
+  function setField<K extends keyof Draft>(key: K, value: Draft[K]) {
+    setDraft((d) => (d ? { ...d, [key]: value } : d));
   }
 
-  async function handleHoursBlur() {
-    const trimmed = hoursText.trim();
-    if (trimmed === "" && entry!.hours == null) return;
-    const parsed = trimmed === "" ? null : Number(trimmed);
-    if (parsed !== null && Number.isNaN(parsed)) {
-      setHoursText(entry!.hours != null ? String(entry!.hours) : "");
+  async function handleUpdate() {
+    if (!draft) return;
+    const trimmedHours = draft.hoursText.trim();
+    const parsedHours = trimmedHours === "" ? null : Number(trimmedHours);
+    if (trimmedHours !== "" && Number.isNaN(parsedHours)) {
+      setError("Hours must be a number.");
       return;
     }
-    if (parsed === entry!.hours) return;
-    await saveField({ hours: parsed });
+
+    const patch: Partial<Entry> & { time_off_reason?: string | null } = {};
+    if (parsedHours !== (entry!.hours ?? null)) patch.hours = parsedHours;
+    if (draft.kind !== (entry!.kind ?? "work")) {
+      patch.kind = draft.kind;
+      patch.time_off_reason = draft.kind === "work" ? null : draft.reason || null;
+    } else if (draft.kind !== "work" && draft.reason !== (entry!.time_off_reason ?? "")) {
+      patch.time_off_reason = draft.reason || null;
+    }
+    if (isWork) {
+      if (draft.project !== (entry!.project ?? "")) patch.project = draft.project || null;
+      if (draft.task !== (entry!.task ?? "")) patch.task = draft.task || null;
+      if (draft.summary !== (entry!.summary ?? "")) patch.summary = draft.summary || null;
+    }
+
+    if (Object.keys(patch).length === 0) return;
+
+    setSaving(true);
+    setError(null);
+    try {
+      const updated = await entriesApi.patch(date, patch);
+      hydrate(updated);
+    } catch {
+      setError("Couldn't save. Try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  async function handleProjectBlur() {
-    if (project === (entry!.project ?? "")) return;
-    await saveField({ project: project || null });
-  }
-
-  async function handleTaskBlur() {
-    if (task === (entry!.task ?? "")) return;
-    await saveField({ task: task || null });
-  }
-
-  async function handleSummaryBlur() {
-    if (summary === (entry!.summary ?? "")) return;
-    await saveField({ summary: summary || null });
-  }
-
-  async function handleReasonBlur() {
-    if (reason === (entry!.time_off_reason ?? "")) return;
-    await saveField({ time_off_reason: reason || null });
+  function handleBack() {
+    if (dirty) {
+      setShowDiscardConfirm(true);
+    } else {
+      navigate(-1);
+    }
   }
 
   async function runRegenerate() {
@@ -103,29 +150,49 @@ export function DayDetail() {
     }
   }
 
-  async function handleConvert(kind: "time_off" | "holiday" | "work") {
-    const updated = await entriesApi.setKind(date, kind, kind === "work" ? null : reason || null);
-    hydrate(updated);
-    setShowConvertChoices(false);
-  }
-
   const hoursExplain =
     entry.clock_in && entry.clock_out
       ? `Derived from ${formatClockTime(entry.clock_in)} → ${formatClockTime(entry.clock_out)}. Typing here overrides it.`
       : "Type the hours for this day.";
 
   return (
-    <AppShell>
+    <AppShell
+      fixedFooter={
+        <div className={styles.updateArea}>
+          {dirty && <span className={styles.unsavedTag}>● Unsaved changes</span>}
+          <button className={styles.updateButton} onClick={handleUpdate} disabled={!dirty || saving}>
+            {saving ? "Saving…" : "Update"}
+          </button>
+        </div>
+      }
+    >
       <div className={styles.content}>
         <div className={styles.header}>
-          <button className={styles.backButton} onClick={() => navigate(-1)} aria-label="Back">
+          <button className={styles.backButton} onClick={handleBack} aria-label="Back">
             ‹
           </button>
           <div className={styles.titleBlock}>
             <h1 className={styles.dateTitle}>{formatDayDetailDate(date)}</h1>
             <span className={`${styles.stateEyebrow} ${isWork ? styles.work : styles.off}`}>
-              {isWork ? "WORKED DAY" : entry.kind === "holiday" ? "HOLIDAY" : "TIME OFF"}
+              {isWork ? "WORKED DAY" : draft.kind === "holiday" ? "HOLIDAY" : "TIME OFF"}
             </span>
+          </div>
+        </div>
+
+        {error && <div className={styles.errorBanner}>{error}</div>}
+
+        <div className={styles.section}>
+          <span className={styles.eyebrow}>DAY TYPE</span>
+          <div className={styles.segmented}>
+            {(Object.keys(KIND_LABELS) as DayKind[]).map((k) => (
+              <button
+                key={k}
+                className={`${styles.segment} ${draft.kind === k ? styles.segmentActive : ""}`}
+                onClick={() => setField("kind", k)}
+              >
+                {KIND_LABELS[k]}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -135,9 +202,8 @@ export function DayDetail() {
             <input
               className={styles.hoursInput}
               inputMode="decimal"
-              value={hoursText}
-              onChange={(e) => setHoursText(e.target.value)}
-              onBlur={handleHoursBlur}
+              value={draft.hoursText}
+              onChange={(e) => setField("hoursText", e.target.value)}
             />
             <p className={styles.hoursExplain}>{hoursExplain}</p>
           </div>
@@ -152,17 +218,20 @@ export function DayDetail() {
               <input
                 className={styles.pickerField}
                 placeholder="Project"
-                value={project}
-                onChange={(e) => setProject(e.target.value)}
-                onBlur={handleProjectBlur}
+                value={draft.project}
+                onChange={(e) => setField("project", e.target.value)}
               />
               <input
                 className={styles.pickerField}
                 placeholder="Task"
-                value={task}
-                onChange={(e) => setTask(e.target.value)}
-                onBlur={handleTaskBlur}
+                value={draft.task}
+                onChange={(e) => setField("task", e.target.value)}
               />
+            </div>
+
+            <div className={styles.section}>
+              <span className={styles.eyebrow}>ACTIVITY BOARD</span>
+              <ActivityBoard date={date} activities={activities} onChange={setActivities} />
             </div>
 
             <div className={styles.section}>
@@ -186,9 +255,8 @@ export function DayDetail() {
               ) : (
                 <textarea
                   className={styles.textarea}
-                  value={summary}
-                  onChange={(e) => setSummary(e.target.value)}
-                  onBlur={handleSummaryBlur}
+                  value={draft.summary}
+                  onChange={(e) => setField("summary", e.target.value)}
                 />
               )}
 
@@ -199,56 +267,43 @@ export function DayDetail() {
           </>
         )}
 
-        <div className={styles.section}>
-          {!showConvertChoices ? (
-            <button className={styles.convertRow} onClick={() => (isWork ? setShowConvertChoices(true) : handleConvert("work"))}>
-              <span className={styles.convertLabel}>
-                {isWork ? "Convert to time off or holiday" : "Convert back to a worked day"}
-              </span>
-              <span className={styles.chevron}>›</span>
-            </button>
-          ) : (
-            <div className={styles.convertChoices}>
-              <button className={styles.convertChoiceButton} onClick={() => handleConvert("time_off")}>
-                Time off
-              </button>
-              <button className={styles.convertChoiceButton} onClick={() => handleConvert("holiday")}>
-                Holiday
-              </button>
-            </div>
-          )}
-        </div>
-
         {!isWork && (
           <div className={styles.section}>
             <span className={styles.eyebrow}>REASON</span>
             <input
               className={styles.reasonInput}
               placeholder="Public holiday, sick, annual leave…"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              onBlur={handleReasonBlur}
+              value={draft.reason}
+              onChange={(e) => setField("reason", e.target.value)}
             />
           </div>
         )}
       </div>
 
       {showConfirm && (
-        <div className={styles.scrim} onClick={() => setShowConfirm(false)}>
-          <div className={styles.sheet} onClick={(e) => e.stopPropagation()}>
-            <h2 className={styles.sheetTitle}>Overwrite your edits?</h2>
-            <p className={styles.sheetBody}>
-              You've changed this summary by hand since it was generated. Regenerating replaces
-              what you wrote.
-            </p>
-            <button className={styles.sheetPrimary} onClick={runRegenerate}>
-              Regenerate anyway
-            </button>
-            <button className={styles.sheetSecondary} onClick={() => setShowConfirm(false)}>
-              Keep my version
-            </button>
-          </div>
-        </div>
+        <ConfirmSheet
+          title="Overwrite your edits?"
+          body="You've changed this summary by hand since it was generated. Regenerating replaces what you wrote."
+          primaryLabel="Regenerate anyway"
+          onPrimary={runRegenerate}
+          secondaryLabel="Keep my version"
+          onSecondary={() => setShowConfirm(false)}
+        />
+      )}
+
+      {showDiscardConfirm && (
+        <ConfirmSheet
+          title="Discard changes?"
+          body="You have unsaved edits on this day. Leaving now discards them."
+          primaryLabel="Discard and leave"
+          danger
+          onPrimary={() => {
+            setShowDiscardConfirm(false);
+            navigate(-1);
+          }}
+          secondaryLabel="Keep editing"
+          onSecondary={() => setShowDiscardConfirm(false)}
+        />
       )}
     </AppShell>
   );

@@ -8,7 +8,6 @@ full list with explanations).
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -32,10 +31,13 @@ class Settings(BaseSettings):
     app_timezone: str = "Asia/Kolkata"
 
     # --- LLM ---
-    llm_provider: Literal["anthropic", "openai"] = "anthropic"
+    # Automatic fallback chain, not a manual switch: OpenAI (gpt-4o-mini) is tried
+    # first when configured, and Anthropic (Haiku) is used if OpenAI has no key, has
+    # no credit, or the call otherwise fails. Either key alone is also enough to run.
     anthropic_api_key: str = ""
+    anthropic_model: str = ""  # optional override; default is claude-haiku-4-5
     openai_api_key: str = ""
-    llm_model: str = ""
+    openai_model: str = ""  # optional override; default is gpt-4o-mini
 
     # --- Persistence ---
     db_path: str = "/tmp/timetrack.db"
@@ -43,17 +45,12 @@ class Settings(BaseSettings):
     backup_retain_days: int = 14
 
     @property
-    def default_llm_model(self) -> str:
-        """The model id to use when LLM_MODEL is not set, per provider."""
-        if self.llm_provider == "anthropic":
-            return "claude-haiku-4-5"
-        # No safe default for OpenAI — model names on that side move fast and a wrong
-        # guess fails silently expensive or not at all. Require it explicitly.
-        return self.llm_model
+    def resolved_openai_model(self) -> str:
+        return self.openai_model or "gpt-4o-mini"
 
     @property
-    def resolved_llm_model(self) -> str:
-        return self.llm_model or self.default_llm_model
+    def resolved_anthropic_model(self) -> str:
+        return self.anthropic_model or "claude-haiku-4-5"
 
     @property
     def auth_configured(self) -> bool:
@@ -61,11 +58,7 @@ class Settings(BaseSettings):
 
     @property
     def llm_configured(self) -> bool:
-        if self.llm_provider == "anthropic":
-            return bool(self.anthropic_api_key)
-        if self.llm_provider == "openai":
-            return bool(self.openai_api_key and self.llm_model)
-        return False
+        return bool(self.openai_api_key or self.anthropic_api_key)
 
 
 @lru_cache

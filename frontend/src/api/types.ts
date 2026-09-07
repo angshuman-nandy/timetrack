@@ -22,3 +22,10 @@ export interface ExportPreview {
   days_in_range: number;
   total_hours: number;
 }
+
+export interface Activity {
+  id: number;
+  date: string;
+  text: string;
+  created_at: string; // ISO 8601, UTC
+}

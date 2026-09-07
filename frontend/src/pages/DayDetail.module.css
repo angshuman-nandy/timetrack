@@ -247,62 +247,69 @@
   color: var(--ink-faint);
 }
 
-/* Confirmation sheet */
-.scrim {
-  position: fixed;
-  inset: 0;
-  background: rgba(8, 9, 11, 0.72);
-  display: flex;
-  align-items: flex-end;
-  z-index: 10;
-}
-
-.sheet {
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 24px 24px 0 0;
-  padding: 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.sheetTitle {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 19px;
-  line-height: 1.25;
-  color: var(--ink);
-  margin: 0;
-}
-
-.sheetBody {
-  font-family: var(--font-sans);
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 1.5;
-  color: var(--ink-dim);
-  margin: 0;
-}
-
-.sheetPrimary {
-  height: 52px;
+.errorBanner {
+  background: var(--error-surface);
+  border: 1px solid var(--error-border);
   border-radius: 16px;
-  background: var(--primary);
+  padding: 14px 16px;
   font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--on-primary);
+  font-size: 13px;
+  color: var(--error-text);
 }
 
-.sheetSecondary {
-  height: 52px;
-  border-radius: 16px;
+.segmented {
+  display: flex;
+  gap: 8px;
+}
+
+.segment {
+  flex: 1;
+  height: 44px;
+  border-radius: 14px;
   border: 1.5px solid var(--border);
   background: transparent;
   font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink-dim);
+}
+
+.segmentActive {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+/* fixed action area, pinned above the bottom nav — matches Today's .actionArea */
+.updateArea {
+  flex-shrink: 0;
+  padding: 12px 20px 8px;
+  background: linear-gradient(to top, var(--bg) 55%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.unsavedTag {
+  font-family: var(--font-sans);
   font-weight: 500;
-  font-size: 16px;
-  color: var(--ink-muted);
+  font-size: 12px;
+  color: var(--edited-text);
+}
+
+.updateButton {
+  width: 100%;
+  height: 56px;
+  border-radius: 18px;
+  background: var(--primary);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--on-primary);
+}
+
+.updateButton:disabled {
+  background: var(--surface-raised);
+  color: var(--ink-faint);
 }

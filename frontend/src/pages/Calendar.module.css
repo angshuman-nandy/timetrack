@@ -181,6 +181,12 @@
   display: block;
   width: 100%;
   text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.cell.selected {
+  box-shadow: 0 0 0 2.5px var(--primary) inset;
 }
 
 .legend {
@@ -238,4 +244,98 @@
   color: var(--ink-faint);
   max-width: 230px;
   margin: 0;
+}
+
+/* Multi-select footer, pinned above the bottom nav */
+.selectionBar {
+  flex-shrink: 0;
+  padding: 12px 20px 8px;
+  background: linear-gradient(to top, var(--bg) 65%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.selectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.selectionCount {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.selectionClose {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.selectionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.selectionButton {
+  flex: 1 1 auto;
+  min-width: 100px;
+  height: 48px;
+  border-radius: 15px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.selectionButtonDanger {
+  composes: selectionButton;
+  border-color: var(--error-border);
+  color: var(--error-text);
+}
+
+.confirmDates {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-dim);
+  margin: 0 0 8px;
+}
+
+.confirmWarning {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--warning-text);
+  background: var(--warning-surface);
+  border: 1px solid var(--warning-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin: 0;
+}
+
+.reasonInput {
+  height: 50px;
+  border-radius: 15px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  padding: 0 16px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--ink);
+  width: 100%;
+}
+
+.reasonInput::placeholder {
+  color: var(--ink-faint);
 }

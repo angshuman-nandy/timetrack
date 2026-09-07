@@ -34,8 +34,9 @@ class OpenAIProvider:
         project: str | None,
         task: str | None,
         hours: float | None,
+        activities: list[str] = (),
     ) -> SummaryResult:
-        prompt = build_prompt(plan_text, work_text, project, task, hours)
+        prompt = build_prompt(plan_text, work_text, project, task, hours, activities)
         try:
             response = self._client.responses.create(
                 model=self.model_id,

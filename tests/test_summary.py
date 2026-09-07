@@ -63,6 +63,32 @@ def test_summarize_with_mocked_provider_fills_summary_and_clears_edited(client, 
     assert body["edited"] is False
 
 
+def test_summarize_passes_activity_board_to_provider(client, monkeypatch):
+    client.post("/api/clock-in", json={"date": "2026-09-01", "plan_text": "Ship the thing"})
+    client.post("/api/entries/2026-09-01/activities", json={"text": "Reviewed PR #412"})
+    client.post("/api/entries/2026-09-01/activities", json={"text": "Client call re: scope"})
+    client.post("/api/clock-out", json={"date": "2026-09-01"})
+
+    captured = {}
+
+    class FakeProvider:
+        model_id = "fake-model-1"
+
+        def summarize(self, **kwargs):
+            captured.update(kwargs)
+            return SummaryResult(summary="Did the work.")
+
+    monkeypatch.setattr(
+        "backend.routers.summary.build_provider", lambda settings: FakeProvider()
+    )
+
+    resp = client.post("/api/entries/2026-09-01/summarize")
+    assert resp.status_code == 200
+    assert len(captured["activities"]) == 2
+    assert captured["activities"][0].endswith("Reviewed PR #412")
+    assert captured["activities"][1].endswith("Client call re: scope")
+
+
 def test_summarize_missing_entry_is_404(client):
     resp = client.post("/api/entries/2026-09-01/summarize")
     assert resp.status_code == 404

@@ -1,29 +1,29 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppShell } from "../components/AppShell";
+import { ActivityBoard } from "../components/ActivityBoard";
+import { ConfirmSheet } from "../components/ConfirmSheet";
 import { Spinner } from "../components/Spinner";
 import { SkeletonLines } from "../components/SkeletonLines";
 import { entriesApi } from "../api/entries";
 import { ApiError } from "../api/client";
-import type { Entry } from "../api/types";
+import type { Activity, DayKind, Entry } from "../api/types";
 import { useElapsedTimer } from "../hooks/useElapsedTimer";
 import { formatClockTime, formatHeaderDate, todayStr } from "../utils/date";
 import styles from "./Today.module.css";
 
-// The design's single "to-do list" textarea persists across the whole day: at Clock In
-// its content is saved as plan_text (the morning intent), and whatever it holds at
-// Clock Out time doubles as work_text (the evening description) — one input control,
-// matching the shipped design, that still fills both backend fields meaningfully.
 type ViewState = "loading" | "idle" | "running" | "generating" | "done";
 
 export function Today() {
   const navigate = useNavigate();
   const date = todayStr();
   const [entry, setEntry] = useState<Entry | null>(null);
-  const [notes, setNotes] = useState("");
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [view, setView] = useState<ViewState>("loading");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [offSheet, setOffSheet] = useState<DayKind | null>(null);
+  const [offReason, setOffReason] = useState("");
 
   const elapsed = useElapsedTimer(view === "running" ? entry?.clock_in ?? null : null);
 
@@ -33,9 +33,9 @@ export function Today() {
   }, []);
 
   async function refresh() {
-    const e = await entriesApi.get(date);
+    const [e, acts] = await Promise.all([entriesApi.get(date), entriesApi.listActivities(date)]);
     setEntry(e);
-    setNotes(e.plan_text ?? "");
+    setActivities(acts);
     setView(e.clock_in && e.clock_out ? "done" : e.clock_in ? "running" : "idle");
   }
 
@@ -43,7 +43,7 @@ export function Today() {
     setBusy(true);
     setError(null);
     try {
-      const e = await entriesApi.clockIn(date, notes || undefined);
+      const e = await entriesApi.clockIn(date);
       setEntry(e);
       setView("running");
     } catch (err) {
@@ -57,7 +57,7 @@ export function Today() {
     setBusy(true);
     setError(null);
     try {
-      const closed = await entriesApi.clockOut(date, notes || undefined);
+      const closed = await entriesApi.clockOut(date);
       setEntry(closed);
       setView("generating");
       try {
@@ -76,26 +76,16 @@ export function Today() {
     }
   }
 
-  async function handleNotesBlur() {
-    if (view !== "idle" && view !== "running") return;
-    if (notes === (entry?.plan_text ?? "")) return;
-    try {
-      const updated = await entriesApi.patch(date, { plan_text: notes || null });
-      setEntry(updated);
-    } catch {
-      // Best-effort autosave — the next successful clock-in/out call carries the text
-      // regardless, so a transient failure here doesn't lose the user's words.
-    }
-  }
-
-  async function handleMarkOff(kind: "time_off" | "holiday") {
+  async function confirmMarkOff() {
+    if (!offSheet) return;
     setBusy(true);
     try {
-      await entriesApi.setKind(date, kind);
+      await entriesApi.setKind(date, offSheet, offReason || null);
       navigate(`/day/${date}`);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't mark the day off.");
       setBusy(false);
+      setOffSheet(null);
     }
   }
 
@@ -110,7 +100,6 @@ export function Today() {
         summary: null,
       });
       setEntry(reopened);
-      setNotes(reopened.plan_text ?? "");
       setView("idle");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't reopen the day.");
@@ -127,10 +116,24 @@ export function Today() {
           Clock In
         </button>
         <div className={styles.secondaryRow}>
-          <button className={styles.secondaryButton} onClick={() => handleMarkOff("time_off")} disabled={busy}>
+          <button
+            className={styles.secondaryButton}
+            onClick={() => {
+              setOffReason("");
+              setOffSheet("time_off");
+            }}
+            disabled={busy}
+          >
             Time off
           </button>
-          <button className={styles.secondaryButton} onClick={() => handleMarkOff("holiday")} disabled={busy}>
+          <button
+            className={styles.secondaryButton}
+            onClick={() => {
+              setOffReason("");
+              setOffSheet("holiday");
+            }}
+            disabled={busy}
+          >
             Holiday
           </button>
         </div>
@@ -171,17 +174,8 @@ export function Today() {
               <p className={styles.bodyText}>No hours logged yet today.</p>
             </div>
             <div className={styles.todoGroup}>
-              <div className={styles.todoLabelRow}>
-                <span className={styles.eyebrow}>TO-DO LIST</span>
-                <span className={styles.optionalTag}>Optional</span>
-              </div>
-              <textarea
-                className={styles.textarea}
-                placeholder="What's on for today? Skip it if you'd rather just start."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                onBlur={handleNotesBlur}
-              />
+              <span className={styles.eyebrow}>ACTIVITY BOARD</span>
+              <ActivityBoard date={date} activities={activities} onChange={setActivities} />
             </div>
           </>
         )}
@@ -197,16 +191,8 @@ export function Today() {
               <p className={styles.subLine}>Clocked in at {formatClockTime(entry.clock_in)}</p>
             </div>
             <div className={styles.todoGroup}>
-              <div className={styles.todoLabelRow}>
-                <span className={styles.eyebrow}>TO-DO LIST</span>
-                <span className={styles.optionalTag}>Optional</span>
-              </div>
-              <textarea
-                className={`${styles.textarea} ${styles.running}`}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                onBlur={handleNotesBlur}
-              />
+              <span className={styles.eyebrow}>ACTIVITY BOARD</span>
+              <ActivityBoard date={date} activities={activities} onChange={setActivities} />
             </div>
           </>
         )}
@@ -259,6 +245,25 @@ export function Today() {
           </>
         )}
       </div>
+
+      {offSheet && (
+        <ConfirmSheet
+          title={offSheet === "holiday" ? "Mark today as a holiday?" : "Mark today as time off?"}
+          body="Optionally add a reason — it shows up on the export."
+          primaryLabel={offSheet === "holiday" ? "Mark as holiday" : "Mark as time off"}
+          onPrimary={confirmMarkOff}
+          secondaryLabel="Cancel"
+          onSecondary={() => setOffSheet(null)}
+        >
+          <input
+            className={styles.reasonInput}
+            placeholder="Public holiday, sick, annual leave…"
+            value={offReason}
+            onChange={(e) => setOffReason(e.target.value)}
+            autoFocus
+          />
+        </ConfirmSheet>
+      )}
     </AppShell>
   );
 }
