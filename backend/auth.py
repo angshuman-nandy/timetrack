@@ -5,6 +5,7 @@ personal app.
 
 from __future__ import annotations
 
+import logging
 import time
 from datetime import timedelta
 
@@ -15,6 +16,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from backend.config import get_settings
 from backend.timezone import utcnow
+
+logger = logging.getLogger("timetrack.auth")
 
 ALGORITHM = "HS256"
 TOKEN_TTL = timedelta(days=30)
@@ -52,9 +55,30 @@ class _AttemptLimiter:
 attempt_limiter = _AttemptLimiter()
 
 
+_BCRYPT_PREFIXES = ("$2a$", "$2b$", "$2y$")
+
+
 def verify_password(password: str, password_hash: str) -> bool:
     if not password_hash:
         return False
+
+    password_hash = password_hash.strip()  # a trailing newline from copy-paste is common
+
+    if not password_hash.startswith(_BCRYPT_PREFIXES):
+        # The #1 real-world cause of "correct password, still rejected": pasting the
+        # script's whole `AUTH_PASSWORD_HASH=$2b$...` output line into the secret's
+        # value field, instead of just the hash after the `=`. Log it plainly so this
+        # is diagnosable from the server log rather than a silent, confusing rejection.
+        logger.warning(
+            "AUTH_PASSWORD_HASH doesn't look like a bcrypt hash (expected it to start "
+            "with $2a$/$2b$/$2y$). Common cause: the secret's value has the "
+            "'AUTH_PASSWORD_HASH=' prefix pasted in along with the hash — it should "
+            "contain ONLY the hash itself, e.g. $2b$12$..... Got a value starting "
+            "with: %r",
+            password_hash[:20],
+        )
+        return False
+
     try:
         return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
     except ValueError:

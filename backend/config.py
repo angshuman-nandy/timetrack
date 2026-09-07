@@ -18,6 +18,9 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",  # the .env also holds deployment-only vars (GIT_REPO_URL, etc.)
+        str_strip_whitespace=True,  # a trailing newline from copy-pasting into a
+        # secrets UI (HF Space secrets, etc.) is a common real-world source of "the
+        # value is right but doesn't match" bugs — strip it at the source.
     )
 
     # --- Auth ---
