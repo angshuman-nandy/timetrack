@@ -31,6 +31,14 @@ ask where the design lives before writing any screen.
    produced by `scripts/hash_password.py`.
 6. Match the existing code's idiom as you add to it — don't introduce a second style
    partway through.
+7. **A new column on an existing table needs an explicit migration.**
+   `SQLModel.metadata.create_all()` only creates tables that don't exist yet — it never
+   alters one already there. Add an entry to `backend/db.py`'s `_COLUMN_MIGRATIONS` (an
+   `ALTER TABLE ... ADD COLUMN`) whenever a model gains a field on a table that has
+   already shipped, or the live, bucket-restored DB breaks on the next query that
+   touches it the moment the new code deploys — this is a live-outage bug, not a
+   cosmetic one. A brand-new table needs no entry — `create_all()` alone is correct
+   for that.
 
 ## Build order
 

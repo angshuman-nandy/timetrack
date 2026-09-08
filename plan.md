@@ -44,6 +44,17 @@ Design:
 
 A single free-tier replica means there's no concurrent-writer problem to solve.
 
+**Schema migrations:** `SQLModel.metadata.create_all()` (called at boot, after restore)
+only creates tables that don't exist yet — it never alters an existing one. The live DB
+is a bucket-restored file that can be from an older version of the app, so **any column
+added to a table that already shipped needs an explicit entry in
+`backend/db.py`'s `_COLUMN_MIGRATIONS`**, applied via a plain `ALTER TABLE ... ADD
+COLUMN` before `create_all()` runs. Skipping this is a live-outage bug, not a cosmetic
+one: every query touching that table starts failing with "no such column" the moment
+the new code deploys over old data — this happened for `day_entry.paused_at` /
+`break_seconds` and broke the deployed Space until fixed. A brand-new *table* needs no
+entry here — `create_all()` alone creates it correctly.
+
 ---
 
 ## Repo layout
