@@ -233,6 +233,15 @@
   color: var(--on-primary);
 }
 
+/* Same size/weight as .primaryButton (full-width, prominent) but in the break accent
+ * color, for actions that deserve equal prominence to the main action without reading
+ * as the same action — Take a break / Clock Out while on a break. */
+.primaryButtonAlt {
+  composes: primaryButton;
+  background: var(--time-off);
+  color: var(--time-off-ink);
+}
+
 .secondaryRow {
   display: flex;
   gap: 10px;

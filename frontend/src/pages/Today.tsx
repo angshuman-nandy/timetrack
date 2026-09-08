@@ -235,7 +235,7 @@ export function Today() {
         <button className={styles.primaryButton} onClick={handleClockOut} disabled={busy}>
           Clock Out
         </button>
-        <button className={styles.secondaryButtonFull} onClick={handlePause} disabled={busy}>
+        <button className={styles.primaryButtonAlt} onClick={handlePause} disabled={busy}>
           Take a break
         </button>
       </div>
@@ -246,7 +246,7 @@ export function Today() {
         <button className={styles.primaryButton} onClick={handleResume} disabled={busy}>
           Resume
         </button>
-        <button className={styles.secondaryButtonFull} onClick={handleClockOut} disabled={busy}>
+        <button className={styles.primaryButtonAlt} onClick={handleClockOut} disabled={busy}>
           Clock Out
         </button>
       </div>
