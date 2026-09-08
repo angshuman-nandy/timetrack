@@ -10,11 +10,12 @@ import { ApiError } from "../api/client";
 import type { Activity, DayKind, Entry } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 import { useElapsedTimer } from "../hooks/useElapsedTimer";
+import { useWorkedElapsed } from "../hooks/useWorkedElapsed";
 import { formatClockTime, formatHeaderDate, todayStr } from "../utils/date";
 import { buildGreeting } from "../utils/greeting";
 import styles from "./Today.module.css";
 
-type ViewState = "loading" | "idle" | "running" | "generating" | "done";
+type ViewState = "loading" | "idle" | "running" | "paused" | "generating" | "done";
 
 export function Today() {
   const navigate = useNavigate();
@@ -30,7 +31,13 @@ export function Today() {
   const [projectText, setProjectText] = useState("");
   const [greeting, setGreeting] = useState<string | null>(null);
 
-  const elapsed = useElapsedTimer(view === "running" ? entry?.clock_in ?? null : null);
+  const isActive = view === "running" || view === "paused";
+  const workedElapsed = useWorkedElapsed(
+    isActive ? entry?.clock_in ?? null : null,
+    entry?.break_seconds ?? 0,
+    view === "paused" ? entry?.paused_at ?? null : null,
+  );
+  const breakElapsed = useElapsedTimer(view === "paused" ? entry?.paused_at ?? null : null);
 
   useEffect(() => {
     void refresh();
@@ -48,7 +55,15 @@ export function Today() {
     setEntry(e);
     setActivities(acts);
     setProjectText(e.project ?? "");
-    setView(e.clock_in && e.clock_out ? "done" : e.clock_in ? "running" : "idle");
+    setView(
+      e.clock_in && e.clock_out
+        ? "done"
+        : e.clock_in && e.paused_at
+          ? "paused"
+          : e.clock_in
+            ? "running"
+            : "idle",
+    );
   }
 
   async function handleProjectBlur() {
@@ -77,6 +92,9 @@ export function Today() {
   }
 
   async function handleClockOut() {
+    const previousView = view; // "running" or "paused" — clocking out from a break is
+    // fine (the backend auto-resumes it), but a failure should restore whichever state
+    // we were actually in, not always fall back to "running".
     setBusy(true);
     setError(null);
     try {
@@ -93,7 +111,35 @@ export function Today() {
       setView("done");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Couldn't clock out. Try again.");
+      setView(previousView);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handlePause() {
+    setBusy(true);
+    setError(null);
+    try {
+      const paused = await entriesApi.pause(date);
+      setEntry(paused);
+      setView("paused");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't start a break. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleResume() {
+    setBusy(true);
+    setError(null);
+    try {
+      const resumed = await entriesApi.resume(date);
+      setEntry(resumed);
       setView("running");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Couldn't resume. Try again.");
     } finally {
       setBusy(false);
     }
@@ -130,6 +176,27 @@ export function Today() {
       setBusy(false);
     }
   }
+
+  // Shared by idle/running/paused — the project field and activity board look and
+  // behave identically regardless of which of those three states you're in.
+  const projectAndBoard = (
+    <>
+      <div className={styles.projectGroup}>
+        <span className={styles.eyebrow}>PROJECT</span>
+        <input
+          className={styles.projectInput}
+          placeholder="Project(s) you're working on…"
+          value={projectText}
+          onChange={(e) => setProjectText(e.target.value)}
+          onBlur={handleProjectBlur}
+        />
+      </div>
+      <div className={styles.todoGroup}>
+        <span className={styles.eyebrow}>ACTIVITY BOARD</span>
+        <ActivityBoard date={date} activities={activities} onChange={setActivities} />
+      </div>
+    </>
+  );
 
   let fixedFooter: ReactNode = null;
   if (view === "idle") {
@@ -168,6 +235,20 @@ export function Today() {
         <button className={styles.primaryButton} onClick={handleClockOut} disabled={busy}>
           Clock Out
         </button>
+        <button className={styles.secondaryButtonFull} onClick={handlePause} disabled={busy}>
+          Take a break
+        </button>
+      </div>
+    );
+  } else if (view === "paused") {
+    fixedFooter = (
+      <div className={styles.actionArea}>
+        <button className={styles.primaryButton} onClick={handleResume} disabled={busy}>
+          Resume
+        </button>
+        <button className={styles.secondaryButtonFull} onClick={handleClockOut} disabled={busy}>
+          Clock Out
+        </button>
       </div>
     );
   }
@@ -197,20 +278,7 @@ export function Today() {
               <span className={styles.eyebrow}>NOT STARTED</span>
               <p className={styles.bodyText}>No hours logged yet today.</p>
             </div>
-            <div className={styles.projectGroup}>
-              <span className={styles.eyebrow}>PROJECT</span>
-              <input
-                className={styles.projectInput}
-                placeholder="Project(s) you're working on…"
-                value={projectText}
-                onChange={(e) => setProjectText(e.target.value)}
-                onBlur={handleProjectBlur}
-              />
-            </div>
-            <div className={styles.todoGroup}>
-              <span className={styles.eyebrow}>ACTIVITY BOARD</span>
-              <ActivityBoard date={date} activities={activities} onChange={setActivities} />
-            </div>
+            {projectAndBoard}
           </>
         )}
 
@@ -221,23 +289,29 @@ export function Today() {
                 <span className={styles.pulseDot} />
                 <span className={styles.eyebrowInProgress}>IN PROGRESS</span>
               </div>
-              <p className={styles.elapsed}>{elapsed}</p>
-              <p className={styles.subLine}>Clocked in at {formatClockTime(entry.clock_in)}</p>
+              <p className={styles.elapsed}>{workedElapsed}</p>
+              <p className={styles.subLine}>
+                Clocked in at {formatClockTime(entry.clock_in)}
+                {entry.break_seconds > 0 && ` · ${Math.round(entry.break_seconds / 60)}m on break so far`}
+              </p>
             </div>
-            <div className={styles.projectGroup}>
-              <span className={styles.eyebrow}>PROJECT</span>
-              <input
-                className={styles.projectInput}
-                placeholder="Project(s) you're working on…"
-                value={projectText}
-                onChange={(e) => setProjectText(e.target.value)}
-                onBlur={handleProjectBlur}
-              />
+            {projectAndBoard}
+          </>
+        )}
+
+        {view === "paused" && entry?.clock_in && entry.paused_at && (
+          <>
+            <div className={`${styles.card} ${styles.breakCard}`}>
+              <div className={styles.eyebrowRow}>
+                <span className={styles.breakDot} />
+                <span className={styles.eyebrowBreak}>ON BREAK</span>
+              </div>
+              <p className={styles.elapsed}>{breakElapsed}</p>
+              <p className={styles.subLine}>
+                {workedElapsed} worked so far · paused at {formatClockTime(entry.paused_at)}
+              </p>
             </div>
-            <div className={styles.todoGroup}>
-              <span className={styles.eyebrow}>ACTIVITY BOARD</span>
-              <ActivityBoard date={date} activities={activities} onChange={setActivities} />
-            </div>
+            {projectAndBoard}
           </>
         )}
 

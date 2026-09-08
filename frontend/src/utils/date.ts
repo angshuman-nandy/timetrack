@@ -64,3 +64,12 @@ export function formatClockTime(iso: string): string {
   const d = new Date(iso);
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
+
+/** HH:MM:SS from a total second count — shared by the running-timer and break-timer
+ * hooks so the two elapsed displays format identically. */
+export function formatHMS(totalSeconds: number): string {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  return `${pad2(h)}:${pad2(m)}:${pad2(s)}`;
+}

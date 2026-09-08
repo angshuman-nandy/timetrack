@@ -150,9 +150,10 @@ export function DayDetail() {
     }
   }
 
+  const breakNote = entry.break_seconds > 0 ? `, minus ${Math.round(entry.break_seconds / 60)}m break` : "";
   const hoursExplain =
     entry.clock_in && entry.clock_out
-      ? `Derived from ${formatClockTime(entry.clock_in)} → ${formatClockTime(entry.clock_out)}. Typing here overrides it.`
+      ? `Derived from ${formatClockTime(entry.clock_in)} → ${formatClockTime(entry.clock_out)}${breakNote}. Typing here overrides it.`
       : "Type the hours for this day.";
 
   return (

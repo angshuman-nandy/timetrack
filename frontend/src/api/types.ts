@@ -7,6 +7,8 @@ export interface Entry {
   clock_out: string | null;
   hours: number | null;
   hours_overridden: boolean;
+  paused_at: string | null; // ISO 8601, UTC — set while a break is in progress
+  break_seconds: number; // accumulated *completed* break time for the day
   plan_text: string | null;
   work_text: string | null;
   project: string | null;
@@ -21,6 +23,11 @@ export interface Entry {
 export interface ExportPreview {
   days_in_range: number;
   total_hours: number;
+}
+
+export interface ExportColumn {
+  header: string;
+  field: string;
 }
 
 export interface Activity {

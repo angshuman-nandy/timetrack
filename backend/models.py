@@ -57,6 +57,13 @@ class DayEntry(SQLModel, table=True):
     hours: float | None = None  # derived from clock_in/out unless overridden
     hours_overridden: bool = False
 
+    # Pause/resume for lunch and other breaks. paused_at is set while a break is in
+    # progress; break_seconds accumulates *completed* breaks only. Hours = clock_out -
+    # clock_in - break_seconds, so the clock genuinely stops billing on a break rather
+    # than just being informational.
+    paused_at: datetime | None = Field(default=None, sa_column=_utc_column())
+    break_seconds: float = 0.0
+
     plan_text: str | None = None  # morning to-do, raw
     work_text: str | None = None  # evening description, raw
 

@@ -125,6 +125,36 @@ def test_export_endpoint_csv_downloads(client):
     assert header == ["Date", "Project", "Task", "Description", "Hours"]
 
 
+def test_export_columns_endpoint_lists_template_columns(client):
+    resp = client.get("/api/export/columns")
+    assert resp.status_code == 200
+    fields = [c["field"] for c in resp.json()]
+    assert fields == ["date", "project", "task", "summary", "hours"]
+
+
+def test_export_download_honors_column_selection(client):
+    client.post("/api/clock-in", json={"date": "2026-09-01"})
+    client.post("/api/clock-out", json={"date": "2026-09-01"})
+    client.patch("/api/entries/2026-09-01", json={"project": "Acme", "hours": 5.0})
+
+    resp = client.get(
+        "/api/export",
+        params={"start": "2026-09-01", "end": "2026-09-30", "format": "csv", "columns": "date,hours"},
+    )
+    assert resp.status_code == 200
+    text = resp.content.decode("utf-8-sig")
+    header = next(csv.reader(io.StringIO(text)))
+    assert header == ["Date", "Hours"]
+
+
+def test_export_download_rejects_empty_column_selection(client):
+    resp = client.get(
+        "/api/export",
+        params={"start": "2026-09-01", "end": "2026-09-30", "format": "csv", "columns": ""},
+    )
+    assert resp.status_code == 400
+
+
 def test_export_preview_endpoint(client):
     client.post("/api/clock-in", json={"date": "2026-09-01"})
     client.post("/api/clock-out", json={"date": "2026-09-01"})

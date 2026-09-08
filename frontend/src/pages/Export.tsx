@@ -3,8 +3,14 @@ import { AppShell } from "../components/AppShell";
 import { Spinner } from "../components/Spinner";
 import { entriesApi } from "../api/entries";
 import { downloadExport } from "../api/client";
+import type { ExportColumn } from "../api/types";
 import { daysInMonth, ymd } from "../utils/date";
 import styles from "./Export.module.css";
+
+// Date anchors every row in the export and every other field is exported relative to
+// it — dropping it would leave a sheet of numbers with no day to attach them to, so
+// it's always included and shown as such rather than offered as a toggle.
+const REQUIRED_FIELD = "date";
 
 type Preset = "this_month" | "last_month" | "custom";
 type Format = "xlsx" | "csv";
@@ -36,6 +42,8 @@ export function Export() {
   const [preview, setPreview] = useState<{ days_in_range: number; total_hours: number } | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [columns, setColumns] = useState<ExportColumn[]>([]);
+  const [selectedFields, setSelectedFields] = useState<Set<string>>(new Set());
 
   const [start, end] = presetRange(preset, customStart, customEnd);
 
@@ -49,11 +57,33 @@ export function Export() {
     };
   }, [start, end]);
 
+  useEffect(() => {
+    let cancelled = false;
+    entriesApi.exportColumns().then((cols) => {
+      if (cancelled) return;
+      setColumns(cols);
+      setSelectedFields(new Set(cols.map((c) => c.field))); // default: everything included
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function toggleField(field: string) {
+    if (field === REQUIRED_FIELD) return;
+    setSelectedFields((prev) => {
+      const next = new Set(prev);
+      if (next.has(field)) next.delete(field);
+      else next.add(field);
+      return next;
+    });
+  }
+
   async function handleDownload() {
     setDownloading(true);
     setError(null);
     try {
-      await downloadExport(start, end, format);
+      await downloadExport(start, end, format, [...selectedFields]);
     } catch {
       setError("The server didn't respond. Your hours are safe — try again in a moment.");
     } finally {
@@ -135,6 +165,29 @@ export function Export() {
           </div>
         </div>
 
+        <div>
+          <span className={styles.sectionLabel}>Fields</span>
+          <div className={styles.optionStack}>
+            {columns.map((col) => {
+              const required = col.field === REQUIRED_FIELD;
+              const selected = required || selectedFields.has(col.field);
+              return (
+                <button
+                  key={col.field}
+                  className={`${styles.optionRow} ${selected ? styles.selected : ""}`}
+                  onClick={() => toggleField(col.field)}
+                  disabled={required}
+                >
+                  <span className={styles.optionLabel}>{col.header}</span>
+                  <span className={styles.checkbox}>
+                    {required ? "Always included" : selected ? "✓" : ""}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className={styles.previewCard}>
           <span className={styles.previewLabel}>Before you send</span>
           <div className={styles.statsRow}>
@@ -165,10 +218,14 @@ export function Export() {
         <button
           className={`${styles.downloadButton} ${downloading ? styles.working : ""}`}
           onClick={handleDownload}
-          disabled={downloading}
+          disabled={downloading || selectedFields.size === 0}
         >
           {downloading && <Spinner size={16} />}
-          {downloading ? "Building the file…" : `Download ${format === "xlsx" ? "Excel" : "CSV"}`}
+          {downloading
+            ? "Building the file…"
+            : selectedFields.size === 0
+              ? "Select at least one field"
+              : `Download ${format === "xlsx" ? "Excel" : "CSV"}`}
         </button>
       </div>
     </AppShell>

@@ -103,7 +103,9 @@ timetrack/
 | `kind` | enum | `work` \| `time_off` \| `holiday` |
 | `clock_in` | datetime? | UTC-stored, local-displayed |
 | `clock_out` | datetime? | |
-| `hours` | float | derived from clock_in/out, user-overridable |
+| `hours` | float | derived from clock_in/out minus `break_seconds`, user-overridable |
+| `paused_at` | datetime? | set while a break is in progress; null otherwise |
+| `break_seconds` | float | accumulated *completed* break time for the day (lunch, etc.) |
 | `plan_text` | str? | morning to-do, raw input |
 | `work_text` | str? | evening description, raw input |
 | `project` | str? | |
@@ -142,7 +144,9 @@ GET    /api/auth/me
 GET    /api/entries?start=&end=     list for calendar/export range
 GET    /api/entries/{date}
 POST   /api/clock-in                {date?, plan_text?}     date defaults to "today" in APP_TIMEZONE
-POST   /api/clock-out               {date?, work_text?}
+POST   /api/clock-out               {date?, work_text?}     auto-resumes an in-progress break first
+POST   /api/pause                   {date?}                 start a break (lunch, etc.) — stops the clock
+POST   /api/resume                  {date?}                 end the current break, accumulating break_seconds
 PATCH  /api/entries/{date}          partial update of any field
 DELETE /api/entries/{date}
 POST   /api/entries/{date}/time-off {kind, reason}
@@ -154,9 +158,15 @@ GET    /api/entries/{date}/activities
 POST   /api/entries/{date}/activities   {text}
 DELETE /api/activities/{id}
 DELETE /api/entries/{date}/activities   clear the whole board for a date
-GET    /api/export?start=&end=&format=xlsx|csv
+GET    /api/export/columns          the template's columns, for the Export screen's field picker
+GET    /api/export?start=&end=&format=xlsx|csv&columns=field1,field2
 GET    /api/health                  no auth; used by Docker/HF health checks
 ```
+
+`columns` on the export download restricts *which* of the template's own columns are
+included in that one file — not their order or headers, which stay whatever
+`export_template.json` says. Omit it to get every column; passing it empty is a 400
+("select at least one field").
 
 `PATCH /api/entries/{date}` upserts: a date with no row yet creates one (Calendar → tap a
 blank past day → fill in hours by hand). A patch that includes `kind` goes through the

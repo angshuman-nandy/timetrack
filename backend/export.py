@@ -5,6 +5,7 @@ fresh on every request, so an edit takes effect with no restart.
 
 from __future__ import annotations
 
+import copy
 import csv
 import io
 import json
@@ -24,6 +25,15 @@ class ExportTemplate:
         self.include_kinds: set[str] = set(raw.get("include_kinds", ["work", "time_off", "holiday"]))
         self.columns: list[dict] = raw["columns"]
         self.totals_row: bool = raw.get("totals_row", False)
+
+    def with_columns(self, fields: set[str]) -> "ExportTemplate":
+        """A copy of this template restricted to the given field names, keeping the
+        template's own column order — the Export screen's field picker chooses *which*
+        of the template's columns to include for one download, never their order or
+        headers, so `export_template.json` stays the single place that controls those."""
+        clone = copy.copy(self)
+        clone.columns = [c for c in self.columns if c["field"] in fields]
+        return clone
 
 
 def load_template() -> ExportTemplate:

@@ -28,6 +28,8 @@ class EntryOut(BaseModel):
     clock_out: datetime | None = None
     hours: float | None = None
     hours_overridden: bool = False
+    paused_at: datetime | None = None
+    break_seconds: float = 0.0
     plan_text: str | None = None
     work_text: str | None = None
     project: str | None = None
@@ -53,6 +55,10 @@ class ClockInRequest(BaseModel):
 class ClockOutRequest(BaseModel):
     date: str | None = None
     work_text: str | None = None
+
+
+class BreakRequest(BaseModel):
+    date: str | None = None
 
 
 class TimeOffRequest(BaseModel):
@@ -86,8 +92,9 @@ def _get_or_404(session: Session, date_str: str) -> DayEntry:
     return row
 
 
-def _round_hours(clock_in: datetime, clock_out: datetime) -> float:
-    return round((clock_out - clock_in).total_seconds() / 3600, 2)
+def _round_hours(clock_in: datetime, clock_out: datetime, break_seconds: float = 0.0) -> float:
+    worked_seconds = (clock_out - clock_in).total_seconds() - break_seconds
+    return round(max(worked_seconds, 0.0) / 3600, 2)
 
 
 def _commit_and_sync(session: Session, row: DayEntry) -> DayEntry:
@@ -164,6 +171,8 @@ def clock_in(body: ClockInRequest, session: Session = Depends(get_session)) -> E
     row.clock_out = None
     row.hours = None
     row.hours_overridden = False
+    row.paused_at = None
+    row.break_seconds = 0.0
     row.plan_text = body.plan_text
     row.work_text = None
     row.summary = None
@@ -171,6 +180,33 @@ def clock_in(body: ClockInRequest, session: Session = Depends(get_session)) -> E
     row.summary_generated_at = None
     row.edited = False
 
+    return EntryOut.from_row(date_str, _commit_and_sync(session, row))
+
+
+@router.post("/pause", response_model=EntryOut)
+def pause(body: BreakRequest, session: Session = Depends(get_session)) -> EntryOut:
+    date_str = body.date or today_str()
+    row = session.get(DayEntry, date_str)
+
+    if row is None or row.clock_in is None or row.clock_out is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, f"Not clocked in for {date_str}.")
+    if row.paused_at is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, f"Already on a break for {date_str}.")
+
+    row.paused_at = utcnow()
+    return EntryOut.from_row(date_str, _commit_and_sync(session, row))
+
+
+@router.post("/resume", response_model=EntryOut)
+def resume(body: BreakRequest, session: Session = Depends(get_session)) -> EntryOut:
+    date_str = body.date or today_str()
+    row = session.get(DayEntry, date_str)
+
+    if row is None or row.paused_at is None:
+        raise HTTPException(status.HTTP_409_CONFLICT, f"Not on a break for {date_str}.")
+
+    row.break_seconds += (utcnow() - row.paused_at).total_seconds()
+    row.paused_at = None
     return EntryOut.from_row(date_str, _commit_and_sync(session, row))
 
 
@@ -185,6 +221,11 @@ def clock_out(body: ClockOutRequest, session: Session = Depends(get_session)) ->
         raise HTTPException(status.HTTP_409_CONFLICT, f"Already clocked out for {date_str}.")
 
     row.clock_out = utcnow()
+    if row.paused_at is not None:
+        # Clocking out directly from a break — count the break up to now, same as an
+        # explicit Resume, rather than requiring one before you can end the day.
+        row.break_seconds += (row.clock_out - row.paused_at).total_seconds()
+        row.paused_at = None
     if body.work_text:
         row.work_text = body.work_text
     else:
@@ -199,7 +240,7 @@ def clock_out(body: ClockOutRequest, session: Session = Depends(get_session)) ->
             or None
         )
     if not row.hours_overridden:
-        row.hours = _round_hours(row.clock_in, row.clock_out)
+        row.hours = _round_hours(row.clock_in, row.clock_out, row.break_seconds)
 
     return EntryOut.from_row(date_str, _commit_and_sync(session, row))
 

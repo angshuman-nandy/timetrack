@@ -69,6 +69,21 @@
   color: rgba(22, 24, 28, 0.6);
 }
 
+.optionRow:disabled {
+  opacity: 0.8;
+}
+
+.checkbox {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.optionRow.selected .checkbox {
+  color: var(--on-primary);
+}
+
 .customDates {
   display: flex;
   gap: 8px;

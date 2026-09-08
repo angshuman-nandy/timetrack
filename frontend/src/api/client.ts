@@ -54,13 +54,23 @@ export const api = {
 };
 
 /** Downloads the export file and saves it via a synthetic link click — this is a real
- * deployed page (not a sandboxed artifact preview), so a normal blob download works. */
-export async function downloadExport(start: string, end: string, format: "xlsx" | "csv"): Promise<void> {
+ * deployed page (not a sandboxed artifact preview), so a normal blob download works.
+ * `columns`, when given, restricts the download to those template fields (the Export
+ * screen's field picker) — omit it to get every column the template defines. */
+export async function downloadExport(
+  start: string,
+  end: string,
+  format: "xlsx" | "csv",
+  columns?: string[],
+): Promise<void> {
   const token = getToken();
   const headers = new Headers();
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
-  const response = await fetch(`/api/export?start=${start}&end=${end}&format=${format}`, { headers });
+  const params = new URLSearchParams({ start, end, format });
+  if (columns) params.set("columns", columns.join(","));
+
+  const response = await fetch(`/api/export?${params}`, { headers });
   if (response.status === 401) {
     clearToken();
     onUnauthorized?.();

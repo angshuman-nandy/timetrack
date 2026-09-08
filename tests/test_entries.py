@@ -171,6 +171,66 @@ def test_bulk_kind_marks_non_contiguous_dates_and_overwrites_worked_day(client):
     assert client.get("/api/entries/2026-09-15").json()["clock_in"] is None
 
 
+def test_pause_and_resume_round_trip(client):
+    client.post("/api/clock-in", json={"date": "2026-09-20"})
+
+    resp = client.post("/api/pause", json={"date": "2026-09-20"})
+    assert resp.status_code == 200
+    assert resp.json()["paused_at"] is not None
+
+    resp = client.post("/api/resume", json={"date": "2026-09-20"})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["paused_at"] is None
+    assert body["break_seconds"] >= 0
+
+
+def test_pause_without_clock_in_is_conflict(client):
+    resp = client.post("/api/pause", json={"date": "2026-09-21"})
+    assert resp.status_code == 409
+
+
+def test_pause_twice_is_conflict(client):
+    client.post("/api/clock-in", json={"date": "2026-09-22"})
+    client.post("/api/pause", json={"date": "2026-09-22"})
+
+    resp = client.post("/api/pause", json={"date": "2026-09-22"})
+    assert resp.status_code == 409
+
+
+def test_resume_without_pause_is_conflict(client):
+    client.post("/api/clock-in", json={"date": "2026-09-23"})
+
+    resp = client.post("/api/resume", json={"date": "2026-09-23"})
+    assert resp.status_code == 409
+
+
+def test_clock_out_while_paused_auto_resumes_and_subtracts_break(client, monkeypatch):
+    import backend.routers.entries as entries_module
+    from datetime import datetime, timezone
+
+    # All utcnow() calls within one request return the same mocked "now" — matches
+    # reality closely enough (the calls within a request are microseconds apart) and
+    # avoids coupling the test to exactly how many times a handler happens to call it.
+    current = {"t": datetime(2026, 9, 24, 9, 0, tzinfo=timezone.utc)}
+    monkeypatch.setattr(entries_module, "utcnow", lambda: current["t"])
+
+    client.post("/api/clock-in", json={"date": "2026-09-24"})
+
+    current["t"] = datetime(2026, 9, 24, 12, 0, tzinfo=timezone.utc)
+    client.post("/api/pause", json={"date": "2026-09-24"})
+
+    current["t"] = datetime(2026, 9, 24, 17, 0, tzinfo=timezone.utc)
+    resp = client.post("/api/clock-out", json={"date": "2026-09-24"})
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["paused_at"] is None
+    # 9:00 -> 17:00 is 8h; paused 12:00 -> clock-out(17:00) is 5h of break.
+    assert body["break_seconds"] == pytest.approx(5 * 3600)
+    assert body["hours"] == pytest.approx(3.0)
+
+
 def test_routes_require_auth(isolated_env, monkeypatch):
     password_hash = bcrypt.hashpw(b"pw", bcrypt.gensalt()).decode()
     monkeypatch.setenv("AUTH_PASSWORD_HASH", password_hash)

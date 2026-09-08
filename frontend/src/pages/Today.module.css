@@ -70,6 +70,11 @@
   color: var(--in-progress);
 }
 
+.eyebrowBreak {
+  composes: eyebrow;
+  color: var(--time-off);
+}
+
 .bodyText {
   font-family: var(--font-sans);
   font-weight: 700;
@@ -91,6 +96,16 @@
   border-radius: 50%;
   background: var(--in-progress);
   animation: pulse-opacity 2.4s ease-in-out infinite;
+}
+
+.breakDot {
+  composes: pulseDot;
+  background: var(--time-off);
+}
+
+.card.breakCard {
+  padding: 22px;
+  border-color: var(--time-off);
 }
 
 @keyframes pulse-opacity {
@@ -233,6 +248,11 @@
   font-weight: 500;
   font-size: 14px;
   color: var(--ink-dim);
+}
+
+.secondaryButtonFull {
+  composes: secondaryButton;
+  width: 100%;
 }
 
 /* State D: day complete */
