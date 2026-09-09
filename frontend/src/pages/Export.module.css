@@ -222,3 +222,14 @@
 .downloadButton.working {
   background: var(--primary-pressed);
 }
+
+.logoutButton {
+  height: 44px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--ink-dim);
+}

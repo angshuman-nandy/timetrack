@@ -4,6 +4,7 @@ import { Spinner } from "../components/Spinner";
 import { entriesApi } from "../api/entries";
 import { downloadExport } from "../api/client";
 import type { ExportColumn } from "../api/types";
+import { useAuth } from "../auth/AuthContext";
 import { daysInMonth, ymd } from "../utils/date";
 import styles from "./Export.module.css";
 
@@ -34,6 +35,7 @@ function formatRangeLabel(start: string, end: string): string {
 }
 
 export function Export() {
+  const { logout } = useAuth();
   const today = new Date();
   const [preset, setPreset] = useState<Preset>("this_month");
   const [customStart, setCustomStart] = useState(ymd(today.getFullYear(), today.getMonth(), 1));
@@ -226,6 +228,10 @@ export function Export() {
             : selectedFields.size === 0
               ? "Select at least one field"
               : `Download ${format === "xlsx" ? "Excel" : "CSV"}`}
+        </button>
+
+        <button className={styles.logoutButton} onClick={logout}>
+          Log out
         </button>
       </div>
     </AppShell>

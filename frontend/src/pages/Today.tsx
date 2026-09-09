@@ -28,6 +28,7 @@ export function Today() {
   const [busy, setBusy] = useState(false);
   const [offSheet, setOffSheet] = useState<DayKind | null>(null);
   const [offReason, setOffReason] = useState("");
+  const [showReopenConfirm, setShowReopenConfirm] = useState(false);
   const [projectText, setProjectText] = useState("");
   const [greeting, setGreeting] = useState<string | null>(null);
 
@@ -158,7 +159,12 @@ export function Today() {
     }
   }
 
-  async function handleReopen() {
+  function handleReopen() {
+    setShowReopenConfirm(true);
+  }
+
+  async function confirmReopen() {
+    setShowReopenConfirm(false);
     setBusy(true);
     try {
       const reopened = await entriesApi.patch(date, {
@@ -381,6 +387,18 @@ export function Today() {
             autoFocus
           />
         </ConfirmSheet>
+      )}
+
+      {showReopenConfirm && (
+        <ConfirmSheet
+          title="Reopen this day?"
+          body="This clears today's clock-in/out times, hours, and summary so you can start over. There's no way back to the completed version once you confirm."
+          primaryLabel="Reopen the day"
+          danger
+          onPrimary={confirmReopen}
+          secondaryLabel="Keep as is"
+          onSecondary={() => setShowReopenConfirm(false)}
+        />
       )}
     </AppShell>
   );
