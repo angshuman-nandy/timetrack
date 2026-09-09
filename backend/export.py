@@ -18,6 +18,11 @@ from backend.models import DayEntry, DayKind
 
 _TEMPLATE_PATH = Path(__file__).resolve().parent.parent / "export_template.json"
 
+_KIND_LABELS: dict[DayKind, str] = {
+    DayKind.time_off: "Time off",
+    DayKind.holiday: "Holiday",
+}
+
 
 class ExportTemplate:
     def __init__(self, raw: dict) -> None:
@@ -42,8 +47,9 @@ def load_template() -> ExportTemplate:
 
 
 def _field_value(entry: DayEntry, field: str, template: ExportTemplate) -> Any:
-    """A day marked time off/holiday exports with 0 hours and its reason standing in for
-    the description, so leave is visible on the sheet without a separate column."""
+    """A day marked time off/holiday exports with 0 hours and "Holiday"/"Time off" (plus
+    the reason, if one was given) standing in for the description, so leave is visible
+    on the sheet without a separate column even when no reason was entered."""
     if field == "date":
         from backend.timezone import parse_date_str
 
@@ -52,7 +58,8 @@ def _field_value(entry: DayEntry, field: str, template: ExportTemplate) -> Any:
         if field == "hours":
             return 0.0
         if field == "summary":
-            return entry.time_off_reason or ""
+            label = _KIND_LABELS.get(entry.kind, entry.kind.value)
+            return f"{label} — {entry.time_off_reason}" if entry.time_off_reason else label
     value = getattr(entry, field, None)
     if value is None:
         return ""

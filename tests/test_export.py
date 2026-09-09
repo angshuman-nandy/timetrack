@@ -39,7 +39,7 @@ def test_template_reorder_and_rename_is_honored():
     assert rows[0] == [8.0, "Did work."]
 
 
-def test_time_off_day_shows_zero_hours_and_reason_as_description():
+def test_time_off_day_shows_zero_hours_and_labeled_reason_as_description():
     template = ExportTemplate(
         {
             "date_format": "%Y-%m-%d",
@@ -48,7 +48,20 @@ def test_time_off_day_shows_zero_hours_and_reason_as_description():
         }
     )
     rows = build_rows(_sample_entries(), template)
-    assert rows[1] == ["Sick day", 0.0]
+    assert rows[1] == ["Time off — Sick day", 0.0]
+
+
+def test_holiday_day_with_no_reason_still_shows_the_kind_label():
+    entries = [DayEntry(date="2026-09-03", kind=DayKind.holiday, hours=0.0)]
+    template = ExportTemplate(
+        {
+            "date_format": "%Y-%m-%d",
+            "include_kinds": ["holiday"],
+            "columns": [{"header": "Description", "field": "summary"}, {"header": "Hours", "field": "hours"}],
+        }
+    )
+    rows = build_rows(entries, template)
+    assert rows[0] == ["Holiday", 0.0]
 
 
 def test_preview_totals_only_worked_hours():
