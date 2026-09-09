@@ -1,4 +1,5 @@
 import { clearToken, getToken } from "../auth/tokenStorage";
+import type { ConsultantHeader } from "./types";
 
 export class ApiError extends Error {
   status: number;
@@ -53,24 +54,27 @@ export const api = {
   delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
 };
 
-/** Downloads the export file and saves it via a synthetic link click — this is a real
- * deployed page (not a sandboxed artifact preview), so a normal blob download works.
- * `columns`, when given, restricts the download to those template fields (the Export
- * screen's field picker) — omit it to get every column the template defines. */
-export async function downloadExport(
-  start: string,
-  end: string,
-  format: "xlsx" | "csv",
-  columns?: string[],
-): Promise<void> {
+/** Pulls the filename the server chose out of Content-Disposition, falling back if
+ * it's ever missing — the server is same-origin here, so the header is readable
+ * with no Access-Control-Expose-Headers needed. Reading it instead of reconstructing
+ * `${start}-to-${end}.${format}` client-side is what lets the extension differ from
+ * the `format` query value (the Consultant format is always .xlsx). */
+function filenameFromResponse(response: Response, fallback: string): string {
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const match = /filename="([^"]+)"/.exec(disposition);
+  return match?.[1] ?? fallback;
+}
+
+/** Fetches a file download, translating the shared 401/error handling the same way
+ * `request()` does for JSON calls, then saves it via a synthetic link click — this
+ * is a real deployed page (not a sandboxed artifact preview), so a normal blob
+ * download works. */
+async function fetchAndSave(path: string, fallbackFilename: string): Promise<void> {
   const token = getToken();
   const headers = new Headers();
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
-  const params = new URLSearchParams({ start, end, format });
-  if (columns) params.set("columns", columns.join(","));
-
-  const response = await fetch(`/api/export?${params}`, { headers });
+  const response = await fetch(`/api${path}`, { headers });
   if (response.status === 401) {
     clearToken();
     onUnauthorized?.();
@@ -81,7 +85,7 @@ export async function downloadExport(
   }
 
   const blob = await response.blob();
-  const filename = `timesheet-${start}-to-${end}.${format}`;
+  const filename = filenameFromResponse(response, fallbackFilename);
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -90,4 +94,21 @@ export async function downloadExport(
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+}
+
+export async function downloadExport(start: string, end: string, format: "xlsx" | "csv"): Promise<void> {
+  const params = new URLSearchParams({ start, end, format });
+  await fetchAndSave(`/export?${params}`, `timesheet-${start}-to-${end}.${format}`);
+}
+
+/** Downloads the Consultant Timesheet format — a fixed ten-column layout matching
+ * the client's own template, with an editable header block instead of a field
+ * picker (see ConsultantHeaderSheet). */
+export async function downloadConsultantExport(
+  start: string,
+  end: string,
+  header: ConsultantHeader,
+): Promise<void> {
+  const params = new URLSearchParams({ start, end, format: "consultant", ...header });
+  await fetchAndSave(`/export?${params}`, `consultant-timesheet-${start}-to-${end}.xlsx`);
 }

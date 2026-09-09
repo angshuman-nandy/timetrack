@@ -109,6 +109,11 @@ def test_migrates_old_schema_day_entry_table_adds_missing_columns(isolated_env):
     assert row.hours == 8.0  # pre-existing data survives the migration
     assert row.paused_at is None
     assert row.break_seconds == 0.0
+    assert row.location is None
+    assert row.deliverable is None
+    assert row.category is None
+    assert row.status is None
+    assert row.remarks is None
 
     # Running it again against an already-migrated table must be a no-op, not an
     # "duplicate column" error.

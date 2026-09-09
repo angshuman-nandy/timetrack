@@ -46,6 +46,13 @@ def load_template() -> ExportTemplate:
         return ExportTemplate(json.load(f))
 
 
+def describe_kind(entry: DayEntry) -> str:
+    """"Holiday", or "Time off — <reason>" (just "Time off" with no reason given).
+    Shared by both export formats so a leave day reads identically everywhere."""
+    label = _KIND_LABELS.get(entry.kind, entry.kind.value)
+    return f"{label} — {entry.time_off_reason}" if entry.time_off_reason else label
+
+
 def _field_value(entry: DayEntry, field: str, template: ExportTemplate) -> Any:
     """A day marked time off/holiday exports with 0 hours and "Holiday"/"Time off" (plus
     the reason, if one was given) standing in for the description, so leave is visible
@@ -58,8 +65,7 @@ def _field_value(entry: DayEntry, field: str, template: ExportTemplate) -> Any:
         if field == "hours":
             return 0.0
         if field == "summary":
-            label = _KIND_LABELS.get(entry.kind, entry.kind.value)
-            return f"{label} — {entry.time_off_reason}" if entry.time_off_reason else label
+            return describe_kind(entry)
     value = getattr(entry, field, None)
     if value is None:
         return ""

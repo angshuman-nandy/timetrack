@@ -5,8 +5,9 @@ import { ActivityBoard } from "../components/ActivityBoard";
 import { ConfirmSheet } from "../components/ConfirmSheet";
 import { Spinner } from "../components/Spinner";
 import { SkeletonLines } from "../components/SkeletonLines";
+import { TimesheetFieldsForm } from "../components/TimesheetFieldsForm";
 import { entriesApi } from "../api/entries";
-import type { Activity, DayKind, Entry } from "../api/types";
+import type { Activity, ConsultantTemplate, DayKind, Entry } from "../api/types";
 import { formatClockTime, formatDayDetailDate } from "../utils/date";
 import styles from "./DayDetail.module.css";
 
@@ -17,6 +18,11 @@ interface Draft {
   task: string;
   summary: string;
   reason: string;
+  location: string;
+  deliverable: string;
+  category: string;
+  status: string;
+  remarks: string;
 }
 
 function toDraft(e: Entry): Draft {
@@ -27,6 +33,11 @@ function toDraft(e: Entry): Draft {
     task: e.task ?? "",
     summary: e.summary ?? "",
     reason: e.time_off_reason ?? "",
+    location: e.location ?? "",
+    deliverable: e.deliverable ?? "",
+    category: e.category ?? "",
+    status: e.status ?? "",
+    remarks: e.remarks ?? "",
   };
 }
 
@@ -48,6 +59,7 @@ export function DayDetail() {
   const [error, setError] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
+  const [consultantTemplate, setConsultantTemplate] = useState<ConsultantTemplate | null>(null);
 
   useEffect(() => {
     void Promise.all([entriesApi.get(date), entriesApi.listActivities(date)]).then(
@@ -58,6 +70,13 @@ export function DayDetail() {
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date]);
+
+  useEffect(() => {
+    entriesApi.consultantTemplate().then(setConsultantTemplate).catch(() => {
+      // Best-effort — the fields still work with typed-in values, just without the
+      // dropdown option lists or the "MVP"/"Remote" placeholders.
+    });
+  }, []);
 
   function hydrate(e: Entry) {
     setEntry(e);
@@ -107,6 +126,11 @@ export function DayDetail() {
       if (draft.project !== (entry!.project ?? "")) patch.project = draft.project || null;
       if (draft.task !== (entry!.task ?? "")) patch.task = draft.task || null;
       if (draft.summary !== (entry!.summary ?? "")) patch.summary = draft.summary || null;
+      if (draft.location !== (entry!.location ?? "")) patch.location = draft.location || null;
+      if (draft.deliverable !== (entry!.deliverable ?? "")) patch.deliverable = draft.deliverable || null;
+      if (draft.category !== (entry!.category ?? "")) patch.category = draft.category || null;
+      if (draft.status !== (entry!.status ?? "")) patch.status = draft.status || null;
+      if (draft.remarks !== (entry!.remarks ?? "")) patch.remarks = draft.remarks || null;
     }
 
     if (Object.keys(patch).length === 0) return;
@@ -264,6 +288,23 @@ export function DayDetail() {
               <button className={styles.regenerateButton} onClick={handleRegenerateClick} disabled={generating}>
                 Regenerate summary
               </button>
+            </div>
+
+            <div className={styles.section}>
+              <span className={styles.eyebrow}>TIMESHEET DETAILS</span>
+              <div className={styles.timesheetFieldsStack}>
+                <TimesheetFieldsForm
+                  value={{
+                    location: draft.location,
+                    deliverable: draft.deliverable,
+                    category: draft.category,
+                    status: draft.status,
+                    remarks: draft.remarks,
+                  }}
+                  onFieldChange={(key, value) => setField(key, value)}
+                  template={consultantTemplate}
+                />
+              </div>
             </div>
           </>
         )}

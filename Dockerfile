@@ -19,6 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/ ./backend/
 COPY export_template.json ./export_template.json
+COPY consultant_template.json ./consultant_template.json
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist
 
 # Defaults match .env.example; HF Space secrets override these at deploy time.

@@ -30,6 +30,11 @@ _engine = None
 _COLUMN_MIGRATIONS: list[tuple[str, str, str]] = [
     ("day_entry", "paused_at", "ALTER TABLE day_entry ADD COLUMN paused_at DATETIME"),
     ("day_entry", "break_seconds", "ALTER TABLE day_entry ADD COLUMN break_seconds FLOAT DEFAULT 0.0"),
+    ("day_entry", "location", "ALTER TABLE day_entry ADD COLUMN location VARCHAR"),
+    ("day_entry", "deliverable", "ALTER TABLE day_entry ADD COLUMN deliverable VARCHAR"),
+    ("day_entry", "category", "ALTER TABLE day_entry ADD COLUMN category VARCHAR"),
+    ("day_entry", "status", "ALTER TABLE day_entry ADD COLUMN status VARCHAR"),
+    ("day_entry", "remarks", "ALTER TABLE day_entry ADD COLUMN remarks VARCHAR"),
 ]
 
 

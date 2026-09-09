@@ -151,6 +151,42 @@ def test_patch_with_kind_holiday_clears_work_fields(client):
     assert body["hours"] == 0.0
 
 
+def test_patch_round_trips_consultant_timesheet_fields(client):
+    client.post("/api/clock-in", json={"date": "2026-09-13"})
+    client.post("/api/clock-out", json={"date": "2026-09-13"})
+
+    resp = client.patch(
+        "/api/entries/2026-09-13",
+        json={
+            "location": "On-site",
+            "deliverable": "Sprint 4",
+            "category": "Development",
+            "status": "In Progress",
+            "remarks": "Blocked on review",
+        },
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["location"] == "On-site"
+    assert body["deliverable"] == "Sprint 4"
+    assert body["category"] == "Development"
+    assert body["status"] == "In Progress"
+    assert body["remarks"] == "Blocked on review"
+
+
+def test_converting_to_holiday_leaves_consultant_fields_untouched(client):
+    """Location/category/etc. are descriptive metadata like project/task, not
+    work-only state — converting a day's kind must not silently discard them, in
+    case the day is switched back to work later (see entries.py::_apply_kind)."""
+    client.post("/api/clock-in", json={"date": "2026-09-14"})
+    client.post("/api/clock-out", json={"date": "2026-09-14"})
+    client.patch("/api/entries/2026-09-14", json={"category": "Documentation"})
+
+    resp = client.patch("/api/entries/2026-09-14", json={"kind": "holiday"})
+    assert resp.status_code == 200
+    assert resp.json()["category"] == "Documentation"
+
+
 def test_bulk_kind_marks_non_contiguous_dates_and_overwrites_worked_day(client):
     client.post("/api/clock-in", json={"date": "2026-09-15"})
     client.post("/api/clock-out", json={"date": "2026-09-15", "work_text": "done"})

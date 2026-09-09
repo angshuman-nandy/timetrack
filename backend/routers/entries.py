@@ -39,6 +39,11 @@ class EntryOut(BaseModel):
     summary_generated_at: datetime | None = None
     edited: bool = False
     time_off_reason: str | None = None
+    location: str | None = None
+    deliverable: str | None = None
+    category: str | None = None
+    status: str | None = None
+    remarks: str | None = None
 
     @classmethod
     def from_row(cls, date_str: str, row: DayEntry | None) -> "EntryOut":
@@ -77,6 +82,11 @@ class EntryPatch(BaseModel):
     task: str | None = None
     summary: str | None = None
     time_off_reason: str | None = None
+    location: str | None = None
+    deliverable: str | None = None
+    category: str | None = None
+    status: str | None = None
+    remarks: str | None = None
 
 
 class BulkKindRequest(BaseModel):
@@ -121,6 +131,13 @@ def _apply_kind(session: Session, row: DayEntry, kind: DayKind, reason: str | No
         # No longer a worked day — clear the fields that only make sense for one, and
         # the activity board along with them (they'd otherwise dangle, orphaned from
         # any UI, and re-surface if the day is ever converted back to work).
+        #
+        # location/deliverable/category/status/remarks (the Consultant Timesheet
+        # fields) are deliberately left alone here, same as project/task above them —
+        # descriptive metadata, not session state, so an accidental Work → Holiday →
+        # Work toggle doesn't silently discard typed data. The export itself is the
+        # one place that decides what a non-work day shows (backend/consultant_export.py
+        # blanks them for any day whose kind isn't "work" regardless of what's stored).
         row.clock_in = None
         row.clock_out = None
         row.plan_text = None

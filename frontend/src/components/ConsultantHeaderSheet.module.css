@@ -1,0 +1,66 @@
+.scrim {
+  composes: scrim from "./ConfirmSheet.module.css";
+}
+
+/* Same look as ConfirmSheet's sheet, but capped and scrollable — this one holds
+ * five labelled inputs plus a read-only period line, tall enough to run off-screen
+ * with a phone keyboard up. */
+.sheet {
+  composes: sheet from "./ConfirmSheet.module.css";
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.sheetTitle {
+  composes: sheetTitle from "./ConfirmSheet.module.css";
+}
+
+.periodLine {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  margin: -6px 0 4px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+
+.fieldInput {
+  height: 50px;
+  border-radius: 15px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  padding: 0 16px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--ink);
+  width: 100%;
+  min-width: 0;
+}
+
+.sheetPrimary {
+  composes: sheetPrimary from "./ConfirmSheet.module.css";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sheetSecondary {
+  composes: sheetSecondary from "./ConfirmSheet.module.css";
+}

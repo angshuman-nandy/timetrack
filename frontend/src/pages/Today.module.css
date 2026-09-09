@@ -161,6 +161,39 @@
   gap: 8px;
 }
 
+.detailsGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detailsToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 44px;
+}
+
+.detailsSummaryText {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--ink-dim);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 65%;
+}
+
+.detailsBody {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 2px;
+}
+
 .todoLabelRow {
   display: flex;
   justify-content: space-between;

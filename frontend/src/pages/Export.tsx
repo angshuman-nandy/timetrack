@@ -1,20 +1,19 @@
 import { useEffect, useState } from "react";
 import { AppShell } from "../components/AppShell";
+import { ConsultantHeaderSheet } from "../components/ConsultantHeaderSheet";
 import { Spinner } from "../components/Spinner";
 import { entriesApi } from "../api/entries";
-import { downloadExport } from "../api/client";
-import type { ExportColumn } from "../api/types";
+import { downloadConsultantExport, downloadExport } from "../api/client";
+import type { ConsultantHeader, ConsultantTemplate } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
+import { setLastConsultantHeader } from "../utils/consultantHeaderStorage";
 import { daysInMonth, ymd } from "../utils/date";
 import styles from "./Export.module.css";
 
-// Date anchors every row in the export and every other field is exported relative to
-// it — dropping it would leave a sheet of numbers with no day to attach them to, so
-// it's always included and shown as such rather than offered as a toggle.
-const REQUIRED_FIELD = "date";
-
 type Preset = "this_month" | "last_month" | "custom";
-type Format = "xlsx" | "csv";
+type Format = "xlsx" | "csv" | "consultant";
+
+const FORMAT_LABELS: Record<Format, string> = { xlsx: "Excel", csv: "CSV", consultant: "Consultant" };
 
 function monthRange(year: number, month: number): [string, string] {
   return [ymd(year, month, 1), ymd(year, month, daysInMonth(year, month))];
@@ -44,8 +43,12 @@ export function Export() {
   const [preview, setPreview] = useState<{ days_in_range: number; total_hours: number } | null>(null);
   const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [columns, setColumns] = useState<ExportColumn[]>([]);
-  const [selectedFields, setSelectedFields] = useState<Set<string>>(new Set());
+
+  // Consultant format: header defaults are fetched lazily (only once the format is
+  // actually picked) rather than on mount, so the other two formats don't pay for it.
+  const [consultantTemplate, setConsultantTemplate] = useState<ConsultantTemplate | null>(null);
+  const [loadingTemplate, setLoadingTemplate] = useState(false);
+  const [showHeaderSheet, setShowHeaderSheet] = useState(false);
 
   const [start, end] = presetRange(preset, customStart, customEnd);
 
@@ -59,33 +62,43 @@ export function Export() {
     };
   }, [start, end]);
 
-  useEffect(() => {
-    let cancelled = false;
-    entriesApi.exportColumns().then((cols) => {
-      if (cancelled) return;
-      setColumns(cols);
-      setSelectedFields(new Set(cols.map((c) => c.field))); // default: everything included
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  async function handleDownload() {
+    setError(null);
 
-  function toggleField(field: string) {
-    if (field === REQUIRED_FIELD) return;
-    setSelectedFields((prev) => {
-      const next = new Set(prev);
-      if (next.has(field)) next.delete(field);
-      else next.add(field);
-      return next;
-    });
+    if (format === "consultant") {
+      if (consultantTemplate) {
+        setShowHeaderSheet(true);
+        return;
+      }
+      setLoadingTemplate(true);
+      try {
+        setConsultantTemplate(await entriesApi.consultantTemplate());
+        setShowHeaderSheet(true);
+      } catch {
+        setError("Couldn't load the timesheet details. Try again in a moment.");
+      } finally {
+        setLoadingTemplate(false);
+      }
+      return;
+    }
+
+    setDownloading(true);
+    try {
+      await downloadExport(start, end, format);
+    } catch {
+      setError("The server didn't respond. Your hours are safe — try again in a moment.");
+    } finally {
+      setDownloading(false);
+    }
   }
 
-  async function handleDownload() {
+  async function handleConsultantSubmit(header: ConsultantHeader) {
     setDownloading(true);
     setError(null);
     try {
-      await downloadExport(start, end, format, [...selectedFields]);
+      await downloadConsultantExport(start, end, header);
+      setLastConsultantHeader(header);
+      setShowHeaderSheet(false);
     } catch {
       setError("The server didn't respond. Your hours are safe — try again in a moment.");
     } finally {
@@ -96,6 +109,9 @@ export function Export() {
   const [thisMonthStart, thisMonthEnd] = monthRange(today.getFullYear(), today.getMonth());
   const lastMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
   const [lastMonthStart, lastMonthEnd] = monthRange(lastMonthDate.getFullYear(), lastMonthDate.getMonth());
+
+  const isConsultant = format === "consultant";
+  const downloadDisabled = downloading || loadingTemplate;
 
   return (
     <AppShell>
@@ -164,29 +180,12 @@ export function Export() {
             >
               CSV
             </button>
-          </div>
-        </div>
-
-        <div>
-          <span className={styles.sectionLabel}>Fields</span>
-          <div className={styles.optionStack}>
-            {columns.map((col) => {
-              const required = col.field === REQUIRED_FIELD;
-              const selected = required || selectedFields.has(col.field);
-              return (
-                <button
-                  key={col.field}
-                  className={`${styles.optionRow} ${selected ? styles.selected : ""}`}
-                  onClick={() => toggleField(col.field)}
-                  disabled={required}
-                >
-                  <span className={styles.optionLabel}>{col.header}</span>
-                  <span className={styles.checkbox}>
-                    {required ? "Always included" : selected ? "✓" : ""}
-                  </span>
-                </button>
-              );
-            })}
+            <button
+              className={`${styles.formatButton} ${isConsultant ? styles.selected : ""}`}
+              onClick={() => setFormat("consultant")}
+            >
+              Consultant
+            </button>
           </div>
         </div>
 
@@ -205,8 +204,9 @@ export function Export() {
             </div>
           </div>
           <p className={styles.previewFootnote}>
-            {formatRangeLabel(start, end)}, as {format === "xlsx" ? "Excel" : "CSV"}. Days marked
-            time off or holiday are listed with zero hours.
+            {isConsultant
+              ? `${formatRangeLabel(start, end)}. Every weekday in the range is listed on the sheet — days with nothing logged show zero hours. You'll fill in the consultant details next.`
+              : `${formatRangeLabel(start, end)}, as ${FORMAT_LABELS[format]}. Days marked time off or holiday are listed with zero hours.`}
           </p>
         </div>
 
@@ -220,20 +220,31 @@ export function Export() {
         <button
           className={`${styles.downloadButton} ${downloading ? styles.working : ""}`}
           onClick={handleDownload}
-          disabled={downloading || selectedFields.size === 0}
+          disabled={downloadDisabled}
         >
-          {downloading && <Spinner size={16} />}
+          {(downloading || loadingTemplate) && <Spinner size={16} />}
           {downloading
             ? "Building the file…"
-            : selectedFields.size === 0
-              ? "Select at least one field"
-              : `Download ${format === "xlsx" ? "Excel" : "CSV"}`}
+            : loadingTemplate
+              ? "Loading…"
+              : `Download ${FORMAT_LABELS[format]}`}
         </button>
 
         <button className={styles.logoutButton} onClick={logout}>
           Log out
         </button>
       </div>
+
+      {showHeaderSheet && consultantTemplate && (
+        <ConsultantHeaderSheet
+          template={consultantTemplate}
+          start={start}
+          end={end}
+          busy={downloading}
+          onSubmit={handleConsultantSubmit}
+          onCancel={() => setShowHeaderSheet(false)}
+        />
+      )}
     </AppShell>
   );
 }

@@ -61,6 +61,12 @@
   gap: 8px;
 }
 
+.timesheetFieldsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .eyebrow {
   font-family: var(--font-mono);
   font-weight: 500;

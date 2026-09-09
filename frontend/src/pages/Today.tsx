@@ -5,9 +5,10 @@ import { ActivityBoard } from "../components/ActivityBoard";
 import { ConfirmSheet } from "../components/ConfirmSheet";
 import { Spinner } from "../components/Spinner";
 import { SkeletonLines } from "../components/SkeletonLines";
+import { EMPTY_TIMESHEET_FIELDS, TimesheetFieldsForm, type TimesheetFieldsValue } from "../components/TimesheetFieldsForm";
 import { entriesApi } from "../api/entries";
 import { ApiError } from "../api/client";
-import type { Activity, DayKind, Entry } from "../api/types";
+import type { Activity, ConsultantTemplate, DayKind, Entry } from "../api/types";
 import { useAuth } from "../auth/AuthContext";
 import { useElapsedTimer } from "../hooks/useElapsedTimer";
 import { useWorkedElapsed } from "../hooks/useWorkedElapsed";
@@ -16,6 +17,14 @@ import { buildGreeting } from "../utils/greeting";
 import styles from "./Today.module.css";
 
 type ViewState = "loading" | "idle" | "running" | "paused" | "generating" | "done";
+
+/** The collapsed row's one-line summary — defaults stand in for blank fields, same
+ * as what the Consultant Timesheet export itself will show for this day. */
+function summarizeTimesheetDetails(fields: TimesheetFieldsValue, template: ConsultantTemplate | null): string {
+  const location = fields.location || template?.field_defaults.location || "Remote";
+  const deliverable = fields.deliverable || template?.field_defaults.deliverable || "MVP";
+  return [location, deliverable, fields.category, fields.status].filter(Boolean).join(" · ");
+}
 
 export function Today() {
   const navigate = useNavigate();
@@ -31,6 +40,9 @@ export function Today() {
   const [showReopenConfirm, setShowReopenConfirm] = useState(false);
   const [projectText, setProjectText] = useState("");
   const [greeting, setGreeting] = useState<string | null>(null);
+  const [timesheetFields, setTimesheetFields] = useState<TimesheetFieldsValue>(EMPTY_TIMESHEET_FIELDS);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [consultantTemplate, setConsultantTemplate] = useState<ConsultantTemplate | null>(null);
 
   const isActive = view === "running" || view === "paused";
   const workedElapsed = useWorkedElapsed(
@@ -46,6 +58,13 @@ export function Today() {
   }, []);
 
   useEffect(() => {
+    entriesApi.consultantTemplate().then(setConsultantTemplate).catch(() => {
+      // Best-effort — the details section still works with typed-in values, just
+      // without the dropdown option lists or the "MVP"/"Remote" placeholders.
+    });
+  }, []);
+
+  useEffect(() => {
     // Picked once the username is known and kept for the session — a fresh phrase
     // each time you open the app, not a new one on every re-render.
     if (username) setGreeting(buildGreeting(username));
@@ -56,6 +75,13 @@ export function Today() {
     setEntry(e);
     setActivities(acts);
     setProjectText(e.project ?? "");
+    setTimesheetFields({
+      location: e.location ?? "",
+      deliverable: e.deliverable ?? "",
+      category: e.category ?? "",
+      status: e.status ?? "",
+      remarks: e.remarks ?? "",
+    });
     setView(
       e.clock_in && e.clock_out
         ? "done"
@@ -75,6 +101,20 @@ export function Today() {
     } catch {
       // Best-effort autosave, same as the old to-do textarea — a transient failure
       // here doesn't block clocking in/out.
+    }
+  }
+
+  function handleTimesheetFieldChange(key: keyof TimesheetFieldsValue, value: string) {
+    setTimesheetFields((f) => ({ ...f, [key]: value }));
+  }
+
+  async function handleTimesheetFieldCommit(key: keyof TimesheetFieldsValue, value: string) {
+    try {
+      const updated = await entriesApi.patch(date, { [key]: value || null } as Partial<Entry>);
+      setEntry(updated);
+    } catch {
+      // Best-effort autosave, same as handleProjectBlur — a transient failure here
+      // doesn't block clocking in/out.
     }
   }
 
@@ -200,6 +240,28 @@ export function Today() {
       <div className={styles.todoGroup}>
         <span className={styles.eyebrow}>ACTIVITY BOARD</span>
         <ActivityBoard date={date} activities={activities} onChange={setActivities} />
+      </div>
+      <div className={styles.detailsGroup}>
+        <button
+          type="button"
+          className={styles.detailsToggle}
+          onClick={() => setDetailsOpen((o) => !o)}
+        >
+          <span className={styles.eyebrow}>TIMESHEET DETAILS</span>
+          <span className={styles.detailsSummaryText}>
+            {detailsOpen ? "Hide" : summarizeTimesheetDetails(timesheetFields, consultantTemplate)}
+          </span>
+        </button>
+        {detailsOpen && (
+          <div className={styles.detailsBody}>
+            <TimesheetFieldsForm
+              value={timesheetFields}
+              onFieldChange={handleTimesheetFieldChange}
+              onFieldCommit={handleTimesheetFieldCommit}
+              template={consultantTemplate}
+            />
+          </div>
+        )}
       </div>
     </>
   );

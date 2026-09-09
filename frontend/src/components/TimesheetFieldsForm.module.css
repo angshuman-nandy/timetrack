@@ -1,0 +1,80 @@
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+
+.fieldInput {
+  height: 50px;
+  border-radius: 15px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  padding: 0 16px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--ink);
+  width: 100%;
+  min-width: 0;
+}
+
+.fieldInput::placeholder {
+  color: var(--ink-faint);
+}
+
+.fieldSelect {
+  composes: fieldInput;
+}
+
+.textarea {
+  min-height: 72px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  padding: 14px;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
+  resize: none;
+  width: 100%;
+}
+
+.textarea::placeholder {
+  color: var(--ink-faint);
+}
+
+.segmented {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.segment {
+  flex: 1;
+  min-width: 72px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink-dim);
+}
+
+.segmentActive {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}

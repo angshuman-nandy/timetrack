@@ -1,0 +1,27 @@
+{
+  "title": "CONSULTANT TIMESHEET",
+  "header_defaults": {
+    "project_program": "Staff Aug",
+    "vendor_company": "Tiger Analytics",
+    "technical_lead": "Divyanshu Jain",
+    "pmo_reviewer": "Bane Kodeih"
+  },
+  "field_defaults": {
+    "location": "Remote",
+    "deliverable": "MVP"
+  },
+  "options": {
+    "category": [
+      "Development",
+      "Testing / UAT Support",
+      "Documentation",
+      "Meeting / Workshop",
+      "Support / Hypercare",
+      "Project Management",
+      "Training",
+      "Other"
+    ],
+    "status": ["Completed", "In Progress", "Blocked", "Planned"],
+    "location": ["Remote", "On-site", "Hybrid"]
+  }
+}

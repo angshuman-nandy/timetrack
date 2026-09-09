@@ -66,6 +66,7 @@ timetrack/
 ├── .env.example             # documents every key; .env itself is gitignored
 ├── .gitignore
 ├── export_template.json    # client column mapping — edit this file to match their format
+├── consultant_template.json # Consultant Timesheet format: header defaults + dropdown lists
 ├── backend/
 │   ├── main.py              # FastAPI app: mounts /api routers + serves built SPA
 │   ├── config.py            # pydantic-settings: reads all env vars once, typed
@@ -75,6 +76,7 @@ timetrack/
 │   ├── models.py              # DayEntry, AppMeta SQLModel tables
 │   ├── timezone.py            # single source of truth for "what calendar day is it"
 │   ├── export.py               # reads export_template.json, writes xlsx (openpyxl) + csv
+│   ├── consultant_export.py    # Consultant Timesheet format: builds the client's XLSX layout fresh
 │   ├── routers/
 │   │   ├── auth_routes.py
 │   │   ├── entries.py          # CRUD, clock-in/out, time-off
@@ -91,6 +93,7 @@ timetrack/
 │   ├── test_auth.py
 │   ├── test_timezone.py
 │   ├── test_export.py
+│   ├── test_consultant_export.py
 │   └── test_storage.py
 └── frontend/
     ├── vite.config.ts           # vite-plugin-pwa config
@@ -126,7 +129,18 @@ timetrack/
 | `summary_generated_at` | datetime? | |
 | `edited` | bool | set true on any manual edit after generation; regenerate warns before overwrite |
 | `time_off_reason` | str? | populated when `kind != work` |
+| `location` | str? | Consultant Timesheet export only — blank falls back to `consultant_template.json`'s default ("Remote") |
+| `deliverable` | str? | Consultant Timesheet export only — blank falls back to the default ("MVP") |
+| `category` | str? | Consultant Timesheet export only — one of `consultant_template.json`'s option list, no fallback |
+| `status` | str? | Consultant Timesheet export only — one of `consultant_template.json`'s option list, no fallback |
+| `remarks` | str? | Consultant Timesheet export only, free text |
 | `created_at` / `updated_at` | datetime | |
+
+The five Consultant Timesheet fields are descriptive metadata, same class as `project`/
+`task` — converting a day's kind (work → time_off/holiday) does not clear them, so an
+accidental round trip doesn't lose typed data. The export itself (`backend/consultant_export.py`)
+is the one place that decides what a non-work day shows: it blanks all five for any day
+whose kind isn't `work`, regardless of what's stored.
 
 **`app_meta`** — key/value: `schema_version`, `last_backup_at`.
 
@@ -252,6 +266,27 @@ real format later — no code change needed for a reorder, rename, or added colu
 `backend/export.py` reads this file at request time (no restart needed after an edit) and
 emits both `.xlsx` (via `openpyxl`) and `.csv`. Time-off days export with `hours=0` and the
 reason in the description column, so leave is visible in the sheet.
+
+### Consultant Timesheet format
+
+A third download format (`GET /api/export?format=consultant`) reproducing a client-provided
+XLSX template exactly: a header block (consultant name, vendor, project/program, period,
+technical lead, PMO reviewer), a fixed ten-column data grid, and SUMMARY/APPROVAL bands with
+`SUM`/`COUNTIF` formulas. `consultant_template.json` at the repo root holds the header
+defaults and the three dropdown option lists (Category, Status, Location), read fresh per
+request via `backend/consultant_export.load_consultant_config()` — the Export screen's
+header overlay and the Today/Day detail dropdowns all read the same lists via
+`GET /api/export/consultant-template`, so nothing is duplicated in the frontend.
+
+Built fresh with `openpyxl` on every request rather than filling in a shipped copy of the
+client's file: that file pins its 44 data rows to a fixed range (merged summary cells, data
+validations, and formulas all reference exact row numbers), and openpyxl's
+`insert_rows`/`delete_rows` doesn't move any of those when the row count changes — any range
+other than the one the file shipped with would silently produce a broken workbook.
+`backend/consultant_export.row_dates()` writes every weekday in the requested range, plus any
+weekend date that actually has an entry, matching the client's own blank template (which
+pre-lists only Mon–Fri). A day with nothing logged gets only its date/weekday and zero
+hours — no "MVP"/"Remote" defaults fabricated onto a day nobody worked.
 
 ---
 

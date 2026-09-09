@@ -77,6 +77,15 @@ class DayEntry(SQLModel, table=True):
 
     time_off_reason: str | None = None
 
+    # Fields the app's own screens don't otherwise need, kept only for the Consultant
+    # Timesheet export format (backend/consultant_export.py). All optional, all blank
+    # for a day never touched by that flow.
+    location: str | None = None
+    deliverable: str | None = None
+    category: str | None = None
+    status: str | None = None
+    remarks: str | None = None
+
     created_at: datetime = Field(default_factory=utcnow, sa_column=_utc_column())
     updated_at: datetime = Field(default_factory=utcnow, sa_column=_utc_column())
 
